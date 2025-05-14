@@ -4,6 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fontes */
 @font-face {
   font-family: 'Bodoni FLF';
   src: url('./assets/fonts/bodoni_[allfont.net].ttf') format('truetype');
@@ -11,6 +12,7 @@
   font-style: normal;
 }
 
+/* Efeitos para logo/titulo da Home */
 @keyframes fade-in-up {
   0% {
     opacity: 0;
@@ -22,6 +24,60 @@
   }
 }
 
-.animate-fade-in-up {
-  animation: fade-in-up 2s ease-out;
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fade-in-up 2s ease-out;
+  }
+}
+
+
+/* Efeito de digitação Home */
+
+.typing-effect {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid #9b9b9b;
+  width: fit-content;
+  animation: 
+    typing 4s steps(40, end),
+    blink-caret .8s step-end infinite,
+    hide-cursor 0.1s 4s forwards;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #9b9b9b; }
+}
+
+/* Esconde a barra permanentemente após 4s */
+@keyframes hide-cursor {
+  to { border-right: none; }
+}
+
+
+
+
+
+
+
+
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 1s ease-out both;
+  }
 }

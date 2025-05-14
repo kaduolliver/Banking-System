@@ -9,7 +9,7 @@ const Navbar = () => {
         <Link to="/" className="text-5xl relative left-10" style={{ fontFamily: 'Bodoni FLF' }}> I&L </Link>
 
         {/* Navegação central */}
-        <nav className="space-x-8 hidden md:flex" style={{ fontFamily: 'Aileron, sans-serif' }}>
+        <nav className="space-x-8 hidden md:flex gap-5" style={{ fontFamily: 'Aileron, sans-serif' }}>
           <Link to="/cripto" className="group relative text-lg text-white transition hover:text-amber-400">
             <span>Mercado Cripto</span>
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
