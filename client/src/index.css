@@ -30,6 +30,22 @@
   }
 }
 
+/* Efeitos para surgimento da Home */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 1s ease-out both;
+  }
+}
+
 
 /* Efeito de digitação Home */
 
@@ -41,7 +57,7 @@
   animation: 
     typing 4s steps(40, end),
     blink-caret .8s step-end infinite,
-    hide-cursor 0.1s 4s forwards;
+    hide-cursor 0.1s 3.5s forwards;
 }
 
 @keyframes typing {
@@ -67,17 +83,21 @@
 
 
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* App.css */
+.main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-@layer utilities {
-  .animate-fade-in {
-    animation: fade-in 1s ease-out both;
-  }
+.header-content {
+
+}
+
+.main-content {
+  
+}
+
+.footer-content {
+
 }

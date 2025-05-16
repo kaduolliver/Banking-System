@@ -4,13 +4,13 @@ import { FaLock, FaGlobe } from "react-icons/fa";
 const Navbar = () => {
   return (
     <header className="bg-black text-white shadow-md w-full fixed top-0 left-0 z-50">
-      <div className="w-full mx-auto px-6 py-7 flex items-center justify-between">
+      <div className="w-full mx-auto px-6 py-5 flex items-center justify-between">
         {/* Logo à esquerda */}
         <Link to="/" className="text-5xl relative left-10" style={{ fontFamily: 'Bodoni FLF' }}> I&L </Link>
 
         {/* Navegação central */}
         <nav className="space-x-8 hidden md:flex gap-5" style={{ fontFamily: 'Aileron, sans-serif' }}>
-          <Link to="/cripto" className="group relative text-lg text-white transition hover:text-amber-400">
+          <Link to="/market" className="group relative text-lg text-white transition hover:text-amber-400">
             <span>Mercado Cripto</span>
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>

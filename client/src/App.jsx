@@ -1,15 +1,22 @@
+// App.jsx
 import './App.css';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Market from './pages/Market';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import SplashScreen from './components/SplashScreen';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const location = useLocation();
+
+  const ocultarFooter = [''];
+
   return (
     <>
       <AnimatePresence>
@@ -17,14 +24,30 @@ export default function App() {
       </AnimatePresence>
 
       {!showSplash && (
-        <>
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/market" element={<Market />} />
-          </Routes>
-          <Footer />
-        </>
+        // Main Container
+        <div className="main-container">
+          {/* Header */}
+          <header className="header-content">
+            <Navbar />
+          </header>
+
+          {/* Content */}
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/market" element={<Market />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
+          </main>
+
+          {/* Footer */}
+          {!ocultarFooter.includes(location.pathname) && (
+            <footer className="footer-content">
+              <Footer />
+            </footer>
+          )}
+        </div>
       )}
     </>
   );
