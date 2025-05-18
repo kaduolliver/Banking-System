@@ -1,0 +1,50 @@
+import * as Tabs from '@radix-ui/react-tabs'
+import { motion, AnimatePresence } from 'framer-motion'
+
+export default function UserTabs({ tabs, activeTab, setActiveTab }) {
+  return (
+    <Tabs.Root
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="flex w-full max-w-5xl h-80 bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
+      orientation="vertical"
+    >
+      {/* Lateral com botões */}
+      <Tabs.List className="flex flex-col w-52 bg-zinc-800 p-4 space-y-2">
+        {tabs.map(({ value, label, icon: Icon }) => (
+          <Tabs.Trigger
+            key={value}
+            value={value}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200
+              ${activeTab === value ? 'bg-blue-600 text-white' : 'text-zinc-300 hover:bg-zinc-700 hover:text-white'}`}
+          >
+            {Icon && <Icon className="w-5 h-5" />}
+            {label}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
+
+      {/* Conteúdo com animação */}
+      <div className="flex-1 p-6 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {tabs.map(({ value, content }) => (
+            <Tabs.Content key={value} value={value} asChild forceMount>
+              {activeTab === value && (
+                <motion.div
+                  key={value}
+                  initial={{ opacity: 0, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, filter: 'blur(10px)' }}
+                  transition={{ duration: 0.5, ease: 'easeInOut' }}
+                  className="absolute inset-0"
+                >
+                  <div className="text-white text-base">{content}</div>
+                </motion.div>
+              )}
+            </Tabs.Content>
+          ))}
+        </AnimatePresence>
+      </div>
+    </Tabs.Root>
+  )
+}

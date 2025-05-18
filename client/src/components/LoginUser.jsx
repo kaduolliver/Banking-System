@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegisterUser from './RegisterUser';
-import FormContainer from './RegisterUser/FormContainer';
-import { User, Lock } from 'lucide-react';
+import FormContainer from './UserFormComponents/FormContainer';
+import InputField from './UserFormComponents/InputField';
+import PasswordField from './UserFormComponents/PasswordField';
+import { User } from 'lucide-react';
 
 export default function AuthPage() {
   const [modo, setModo] = useState('login');
@@ -43,49 +45,29 @@ export default function AuthPage() {
               initial={{ opacity: 0, x: modo === 'login' ? 100 : -100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: modo === 'login' ? -100 : 100 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
-
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
             >
               <FormContainer
                 title="Acesse sua conta"
                 onSubmit={handleSubmit}
                 icon={<User className="text-amber-600" />}
               >
-                <div>
-                  <label htmlFor="usuario" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Usuário
-                  </label>
-                  <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-amber-600">
-                    <User className="text-gray-400 mr-2" size={18} />
-                    <input
-                      id="usuario"
-                      name="usuario"
-                      type="text"
-                      value={formData.usuario}
-                      onChange={handleChange}
-                      className="w-full bg-transparent outline-none text-gray-900 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
+                <InputField
+                  label="CPF"
+                  name="usuario"
+                  mask="___.___.___-__"
+                  value={formData.usuario}
+                  onChange={handleChange}
+                  icon={User}
+                />
 
-                <div>
-                  <label htmlFor="senha" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Senha
-                  </label>
-                  <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-amber-600">
-                    <Lock className="text-gray-400 mr-2" size={18} />
-                    <input
-                      id="senha"
-                      name="senha"
-                      type="password"
-                      value={formData.senha}
-                      onChange={handleChange}
-                      className="w-full bg-transparent outline-none text-gray-900 dark:text-white"
-                      required
-                    />
-                  </div>
-                </div>
+                <PasswordField
+                  label="Senha"
+                  name="senha"
+                  value={formData.senha}
+                  onChange={handleChange}
+                />
+
 
                 <AnimatePresence>
                   {error && (
@@ -94,7 +76,7 @@ export default function AuthPage() {
                       initial={{ opacity: 0, x: modo === 'login' ? -100 : 100 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: modo === 'login' ? 100 : -100 }}
-                      transition={{ duration: 0.6, ease: "easeInOut" }}
+                      transition={{ duration: 0.6, ease: 'easeInOut' }}
                     >
                       {error}
                     </motion.p>
@@ -128,7 +110,6 @@ export default function AuthPage() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 50 }}
               transition={{ duration: 0.4 }}
-
             >
               <RegisterUser onToggle={() => setModo('login')} />
             </motion.div>

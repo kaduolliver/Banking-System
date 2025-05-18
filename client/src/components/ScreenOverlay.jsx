@@ -4,7 +4,7 @@ export default function ScreenOverlay() {
   const [hide, setHide] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setHide(true), 500); // tempo da transição
+    const timer = setTimeout(() => setHide(true), 500); 
     return () => clearTimeout(timer);
   }, []);
 

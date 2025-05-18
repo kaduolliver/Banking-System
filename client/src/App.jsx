@@ -1,10 +1,10 @@
-// App.jsx
 import './App.css';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Market from './pages/Market';
 import Login from './pages/Login';
-import Register from './pages/Register';
+import About from './pages/About';
+import User from './pages/User';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { AnimatePresence } from 'framer-motion';
@@ -37,7 +37,8 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route path="/market" element={<Market />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/user" element={<User />} />
             </Routes>
           </main>
 

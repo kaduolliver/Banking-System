@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 export default function SplashScreen({ onComplete }) {
     useEffect(() => {
         const timer = setTimeout(() => {
-            onComplete(); // Chama o fim da splash após a animação
-        }, 3500); // Tempo total da splash
+            onComplete();
+        }, 3500); 
 
         return () => clearTimeout(timer);
     }, [onComplete]);

@@ -20,7 +20,7 @@ const Navbar = () => {
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>
 
-          <Link to="/quem-somos" className="group relative text-lg text-white transition hover:text-amber-400">
+          <Link to="/about" className="group relative text-lg text-white transition hover:text-amber-400">
             <span>Quem somos?</span>
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>

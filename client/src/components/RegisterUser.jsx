@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
-import FormContainer from './RegisterUser/FormContainer';
-import InputField from './RegisterUser/InputField';
-import PasswordField from './RegisterUser/PasswordField';
-import PasswordCriteria from './RegisterUser/PasswordCriteria';
+import FormContainer from './UserFormComponents/FormContainer';
+import InputField from './UserFormComponents/InputField';
+import PasswordField from './UserFormComponents/PasswordField';
+import PasswordCriteria from './UserFormComponents/PasswordCriteria';
 
 export default function RegisterUser({ onToggle }) {
   const [formData, setFormData] = useState({

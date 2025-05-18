@@ -75,19 +75,9 @@
   to { border-right: none; }
 }
 
-
-
-
-
-
-
-
-
-/* App.css */
+/*Configuração de App.jsx*/
 .main-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  
 }
 
 .header-content {

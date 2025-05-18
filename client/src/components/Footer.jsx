@@ -1,3 +1,4 @@
+import LogoBar from "../components/LogoBar";
 import {
     FaYoutube,
     FaInstagram,
@@ -16,6 +17,8 @@ const FooterLink = ({ href, children }) => (
 
 const Footer = () => {
     return (
+        <>
+        <LogoBar />
         <footer className="bg-black text-white py-7">
             <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between gap-12">
                 {/* Social */}
@@ -40,7 +43,7 @@ const Footer = () => {
                 <div>
                     <h3 className="text-lg font-semibold text-gray-400 mb-4">Sobre nós</h3>
                     <ul className="space-y-2 text-sm">
-                        <li><FooterLink href="#">Sobre</FooterLink></li>
+                        <li><FooterLink href="/about">Quem Somos</FooterLink></li>
                         <li><FooterLink href="#">Anúncios</FooterLink></li>
                         <li><FooterLink href="#">Jurídico</FooterLink></li>
                         <li><FooterLink href="#">Termos</FooterLink></li>
@@ -92,6 +95,7 @@ const Footer = () => {
                 Infinity & Legacy Group © 2025 | Todos os direitos reservados.
             </div>
         </footer>
+        </>
     );
 };
 

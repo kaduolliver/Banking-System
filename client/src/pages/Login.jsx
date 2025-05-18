@@ -1,5 +1,5 @@
 import ScreenOverlay from "../components/ScreenOverlay";
-import AuthPage from "../components/AuthPage";
+import AuthPage from "../components/LoginUser";
 
 export default function LoginUser() {
   return (
