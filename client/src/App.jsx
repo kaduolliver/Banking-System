@@ -5,11 +5,15 @@ import Market from './pages/Market';
 import Login from './pages/Login';
 import About from './pages/About';
 import User from './pages/User';
+import CreditCard from './pages/CreditCard';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import SplashScreen from './components/SplashScreen';
+
+// Importa o ScrollToTop
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -31,6 +35,9 @@ export default function App() {
             <Navbar />
           </header>
 
+          {/* Adiciona ScrollToTop aqui */}
+          <ScrollToTop />
+
           {/* Content */}
           <main className="main-content">
             <Routes>
@@ -39,6 +46,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/user" element={<User />} />
+              <Route path="/creditcard" element={<CreditCard />} />
             </Routes>
           </main>
 
