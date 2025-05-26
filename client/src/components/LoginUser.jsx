@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegisterUser from './RegisterUser';
-import FormContainer from './UserFormComponents/FormContainer';
-import InputField from './UserFormComponents/InputField';
-import PasswordField from './UserFormComponents/PasswordField';
+import FormContainer from './LoginFormComponents/FormContainer';
+import InputField from './LoginFormComponents/InputField';
+import PasswordField from './LoginFormComponents/PasswordField';
 import { User } from 'lucide-react';
 
 export default function AuthPage() {

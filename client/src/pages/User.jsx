@@ -1,37 +1,51 @@
-import { useState } from 'react'
-import ScreenOverlay from "../components/ScreenOverlay";
-import UserTabs from '../components/UserTabs';
-import {
-    LayoutDashboard,
-    Wallet,
-    Settings,
-    Bell,
-    Shield,
-    LifeBuoy,
-} from 'lucide-react'
-
-const tabs = [
-    { value: 'tab1', label: 'Dashboard', icon: LayoutDashboard, content: 'Painel geral' },
-    { value: 'tab2', label: 'Carteira', icon: Wallet, content: 'Seus ativos digitais' },
-    { value: 'tab3', label: 'Configurações', icon: Settings, content: 'Preferências do usuário' },
-    { value: 'tab4', label: 'Notificações', icon: Bell, content: 'Alertas e mensagens' },
-    { value: 'tab5', label: 'Segurança', icon: Shield, content: 'Verificação em duas etapas' },
-    { value: 'tab6', label: 'Suporte', icon: LifeBuoy, content: 'Central de ajuda' },
-]
-
+﻿import { useEffect, useState } from 'react';
+import UserTabs from '../components/UserComponents/UserTabs';
+import Client from '../components/UserComponents/Client';
+import Employee from '../components/UserComponents/Employee';
+import { UserIcon, SettingsIcon } from 'lucide-react'; 
+import Navbar from '../components/navbar';
 
 export default function User() {
-    const [activeTab, setActiveTab] = useState('tab1')
+  const [activeTab, setActiveTab] = useState('perfil');
+  const [userType, setUserType] = useState(null); // 'client' ou 'employee'
 
-    return (
-        <>
-            <ScreenOverlay />
-            <div className="pt-20 min-h-screen bg-cover bg-center bg-slate-950">
-                <div className="p-8">
-                    <h1 className="text-white text-2xl mb-4">Área do Usuário</h1>
-                    <UserTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
-                </div>
-            </div>
-        </>
-    )
+  useEffect(() => {
+    // Simulação do tipo de usuário (ex: vindo do backend ou contexto)
+    const fakeUserType = 'client'; // trocar para 'employee' para testar
+    setUserType(fakeUserType);
+  }, []);
+
+  if (!userType) return null;
+
+  const isClient = userType === 'client';
+  const contentComponent = isClient ? <Client /> : <Employee />;
+
+  const tabs = [
+    {
+      value: 'perfil',
+      label: 'Meu Perfil',
+      icon: UserIcon,
+      content: contentComponent,
+    },
+    {
+      value: 'config',
+      label: 'Configurações',
+      icon: SettingsIcon,
+      content: (
+        <div>
+          <h2 className="text-xl font-bold mb-2">Configurações</h2>
+          <p className="text-gray-300">Aqui você poderá configurar sua conta.</p>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <>
+    <Navbar />
+    <div className="min-h-screen flex items-center justify-center bg-cover p-6" style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}>
+      <UserTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+    </div>
+    </>
+  );
 }

@@ -1,7 +1,8 @@
-import ScreenOverlay from "../components/ScreenOverlay";
+import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import TitleBar from "../components/TitleBar";
+import TitleBar from "../components/EffectsComponents/TitleBar";
+import Navbar from "../components/navbar";
 
 const App = () => {
     const [expandedId, setExpandedId] = useState(null);
@@ -13,14 +14,18 @@ const App = () => {
             title: "Infinity Card",
             image: "/images/Infinity-CreditCard.png",
             description:
-                "O Infinity Card é pensado para quem está imerso no universo das criptomoedas. Ele oferece transações rápidas e seguras com ativos digitais, integração direta com plataformas cripto, recursos modernos para acompanhar o mercado em tempo real, taxas competitivas e benefícios voltados para o universo digital.",
+                "O Infinity Card é pensado para quem está imerso no universo das criptomoedas.",
+            cardDescription:
+                "Ele oferece integração direta com carteiras digitais e plataformas blockchain, permitindo transações rápidas, seguras e globais com criptoativos. Com tecnologia de ponta, o Infinity Card traz suporte para stablecoins, conversão automática em tempo real e acesso a benefícios exclusivos no ecossistema Web3 — incluindo cashback em tokens, acesso a eventos do mercado cripto e monitoramento de mercado ao vivo direto pelo aplicativo.",
         },
         {
             id: 2,
             title: "Legacy Card",
             image: "/images/Legacy-CreditCard.png",
             description:
-                "O Legacy Card é ideal para quem prefere transações financeiras tradicionais, oferecendo operações seguras e confiáveis em bancos, funcionalidades para compras físicas e online, suporte completo para serviços bancários convencionais e benefícios clássicos como programa de pontos e atendimento personalizado.",
+                "O Legacy Card é ideal para quem prefere transações financeiras tradicionais, oferecendo operações seguras e confiáveis.",
+            cardDescription:
+                "A escolha ideal para compras físicas e online, transferências bancárias, saques em caixas eletrônicos e gestão de finanças do dia a dia. Ele oferece suporte completo aos principais bancos, compatibilidade com carteiras digitais, programa de pontos, atendimento personalizado e benefícios premium — tudo com a solidez das instituições financeiras tradicionais.",
         },
     ];
 
@@ -38,6 +43,7 @@ const App = () => {
                 className="relative min-h-[100vh] bg-cover bg-fixed bg-center bg-black pt-48 pb-24 animate-fade-in delay-[500ms]"
                 style={{ backgroundImage: "url('/images/Legacy-Credit-Card-bg-2.png')" }}
             >
+                <Navbar />
                 <TitleBar title="Seja membro Infinity & Legacy" className="z-30" />
                 <div className="flex items-center justify-center w-full p-6">
                     <div className="grid grid-cols-2 gap-6">
@@ -91,7 +97,7 @@ const App = () => {
                                             height: isExpanded ? "auto" : 0,
                                         }}
                                         transition={{ duration: 0.3 }}
-                                        className="text-gray-300 overflow-hidden px-6"
+                                        className="text-gray-300 overflow-hidden px-6 relative bottom-5"
                                     >
                                         {card.description}
                                     </motion.p>
@@ -117,32 +123,32 @@ const App = () => {
                 <AnimatePresence>
                     {selectedCard && (
                         <motion.div
-                            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]"
                             onClick={() => setSelectedId(null)}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                         >
                             <motion.div
-                                className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md"
+                                className="bg-black rounded-xl shadow-lg p-6 w-full max-w-md"
                                 layoutId={`card-${selectedCard.id}`}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <motion.img
                                     layoutId={`image-${selectedCard.id}`}
                                     src={selectedCard.image}
-                                    className="rounded-lg mb-4 w-full"
+                                    className="rounded-lg w-full"
                                     alt={selectedCard.title}
                                 />
-                                <motion.h2 layoutId={`title-${selectedCard.id}`} className="text-2xl font-bold mb-2">
+                                <motion.h2 layoutId={`title-${selectedCard.id}`} className="text-2xl font-bold">
                                     {selectedCard.title}
                                 </motion.h2>
-                                <p className="text-gray-600 mb-4">
-                                    Aqui estão mais informações sobre o cartão <strong>{selectedCard.title}</strong>.
+                                <p className="text-gray-300 mb-4 text-base">
+                                    <strong className="text-white">{selectedCard.title}</strong><br/>{selectedCard.cardDescription}
                                 </p>
                                 <button
                                     onClick={() => setSelectedId(null)}
-                                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                    className="mt-4 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-700 text-white rounded hover:from-orange-700 hover:to-amber-600 transition"
                                 >
                                     Fechar
                                 </button>

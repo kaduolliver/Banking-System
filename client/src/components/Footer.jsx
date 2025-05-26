@@ -1,4 +1,4 @@
-import LogoBar from "../components/LogoBar";
+import LogoBar from "./EffectsComponents/LogoBar";
 import {
     FaYoutube,
     FaInstagram,
@@ -71,7 +71,7 @@ const Footer = () => {
                 <div>
                     <h3 className="text-lg font-semibold text-gray-400 mb-4">Serviços</h3>
                     <ul className="space-y-2 text-sm">
-                        <li><FooterLink href="#">Dados</FooterLink></li>
+                        <li><FooterLink href="/creditcard">Cartões</FooterLink></li>
                         <li><FooterLink href="#">Gráficos</FooterLink></li>
                         <li><FooterLink href="#">Empréstimo</FooterLink></li>
                         <li><FooterLink href="#">Trading</FooterLink></li>

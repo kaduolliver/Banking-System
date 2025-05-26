@@ -1,9 +1,10 @@
-import ScreenOverlay from "../components/ScreenOverlay";
-import AnimatedCounter from "../components/AnimatedCounter";
+import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
+import AnimatedCounter from "../components/EffectsComponents/AnimatedCounter";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
-import InitialsBar from "../components/InitialsBar";
+import InitialsBar from "../components/EffectsComponents/InitialsBar";
+import Navbar from "../components/navbar";
 
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
     return (
         <>
             <ScreenOverlay />
+            <Navbar />
             <div
                 className="pt-20 min-h-screen bg-cover bg-center bg-black flex items-center justify-center animate-fade-in delay-[500ms]"
                 style={{ backgroundImage: "url('/images/bg-img.jpg')" }}>
@@ -54,7 +56,7 @@ export default function Home() {
                                 <motion.div
                                     initial={{ scaleX: 0 }}
                                     animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
-                                    transition={{ duration: 1, delay: 0.8, ease: [0.42, 0, 0.58, 1] }}
+                                    transition={{ duration: 1, delay: 0.3, ease: [0.42, 0, 0.58, 1] }}
                                     className="absolute inset-0 bg-white rounded shadow-sm origin-top z-0"
                                 />
                                 <span className="relative z-10 text-black p-1 inline-block">
@@ -67,7 +69,7 @@ export default function Home() {
                                 <motion.div
                                     initial={{ scaleX: 0 }}
                                     animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
-                                    transition={{ duration: 1, delay: 1, ease: [0.42, 0, 0.58, 1] }}
+                                    transition={{ duration: 1, delay: 0.8, ease: [0.42, 0, 0.58, 1] }}
                                     className="absolute inset-0 bg-white rounded shadow-sm origin-top z-0"
                                 />
                                 <span className="relative z-10 text-black p-1 inline-block">
@@ -79,7 +81,7 @@ export default function Home() {
                                 <motion.div
                                     initial={{ scaleX: 0 }}
                                     animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
-                                    transition={{ duration: 1, delay: 1.2, ease: [0.42, 0, 0.58, 1] }}
+                                    transition={{ duration: 1, delay: 1, ease: [0.42, 0, 0.58, 1] }}
                                     className="absolute inset-0 bg-white rounded shadow-sm origin-top z-0"
                                 />
                                 <span className="relative z-10 text-black p-1 inline-block">

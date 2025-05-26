@@ -6,14 +6,14 @@ import Login from './pages/Login';
 import About from './pages/About';
 import User from './pages/User';
 import CreditCard from './pages/CreditCard';
-import Navbar from './components/Navbar';
+//import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import SplashScreen from './components/SplashScreen';
+import SplashScreen from './components/EffectsComponents/SplashScreen';
 
 // Importa o ScrollToTop
-import ScrollToTop from './components/ScrollToTop';
+import ScrollToTop from './components/EffectsComponents/ScrollToTop';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -32,7 +32,7 @@ export default function App() {
         <div className="main-container">
           {/* Header */}
           <header className="header-content">
-            <Navbar />
+            {/* <Navbar /> */}
           </header>
 
           {/* Adiciona ScrollToTop aqui */}

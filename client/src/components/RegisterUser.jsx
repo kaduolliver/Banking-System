@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
-import FormContainer from './UserFormComponents/FormContainer';
-import InputField from './UserFormComponents/InputField';
-import PasswordField from './UserFormComponents/PasswordField';
-import PasswordCriteria from './UserFormComponents/PasswordCriteria';
+import FormContainer from './LoginFormComponents/FormContainer';
+import InputField from './LoginFormComponents/InputField';
+import PasswordField from './LoginFormComponents/PasswordField';
+import PasswordCriteria from './LoginFormComponents/PasswordCriteria';
+import { registerUsuario } from '../services/registerservice';
 
 export default function RegisterUser({ onToggle }) {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ export default function RegisterUser({ onToggle }) {
     if (name === 'senha' || name === 'confirmarSenha') setErroSenha('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!isSenhaValida()) {
@@ -65,7 +66,19 @@ export default function RegisterUser({ onToggle }) {
     }
 
     setErroSenha('');
-    console.log('Dados enviados:', formData);
+
+    const dadosLimpos = {
+      ...formData,
+      cpf: formData.cpf.replace(/\D/g, ''),
+      telefone: formData.telefone.replace(/\D/g, '')
+    };
+    
+    try {
+      const data = await registerUsuario(dadosLimpos);
+      alert("Registro realizado com sucesso!");
+    } catch (error) {
+      alert("Erro ao registrar: " + error.message);
+    }
   };
 
   return (

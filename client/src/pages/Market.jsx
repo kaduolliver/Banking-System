@@ -1,4 +1,4 @@
-import ScreenOverlay from "../components/ScreenOverlay";
+import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 
 export default function Market() {
     return (
