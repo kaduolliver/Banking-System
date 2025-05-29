@@ -72,7 +72,7 @@ export default function RegisterUser({ onToggle }) {
       cpf: formData.cpf.replace(/\D/g, ''),
       telefone: formData.telefone.replace(/\D/g, '')
     };
-    
+
     try {
       const data = await registerUsuario(dadosLimpos);
       alert("Registro realizado com sucesso!");
@@ -111,7 +111,7 @@ export default function RegisterUser({ onToggle }) {
       </div>
 
       <div className="grid grid-cols-7 gap-4 mt-4">
-        <div className="md:col-span-4"> 
+        <div className="md:col-span-4">
           <InputField
             label="Telefone"
             name="telefone"
@@ -167,11 +167,15 @@ export default function RegisterUser({ onToggle }) {
         Já tem uma conta?{' '}
         <button
           type="button"
-          onClick={onToggle}
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            onToggle();
+          }}
           className="text-orange-700 hover:underline font-medium"
         >
           Fazer login
         </button>
+
       </p>
     </FormContainer>
 
