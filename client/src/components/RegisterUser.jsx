@@ -5,7 +5,7 @@ import FormContainer from './LoginFormComponents/FormContainer';
 import InputField from './LoginFormComponents/InputField';
 import PasswordField from './LoginFormComponents/PasswordField';
 import PasswordCriteria from './LoginFormComponents/PasswordCriteria';
-import { registerUsuario } from '../services/registerservice';
+import { registerUsuario } from '../services/auth/registerService';
 
 export default function RegisterUser({ onToggle }) {
   const [formData, setFormData] = useState({

@@ -7,7 +7,8 @@ CREATE TABLE usuario (
 	tipo_usuario VARCHAR(50) NOT NULL CHECK (tipo_usuario IN ('cliente', 'funcionario')),
 	senha_hash VARCHAR(255) NOT NULL,
 	otp_ativo BOOLEAN DEFAULT FALSE,
-	otp_expiracao TIMESTAMP
+	otp_expiracao TIMESTAMP,
+	otp_codigo VARCHAR(10)
 );
 
 CREATE TABLE funcionario (

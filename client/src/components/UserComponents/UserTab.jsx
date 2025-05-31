@@ -6,7 +6,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
     <Tabs.Root
       value={activeTab}
       onValueChange={setActiveTab}
-      className="flex w-full max-w-5xl h-80 bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
+      className="flex w-full max-w-5xl h-[500px] bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
       orientation="vertical"
     >
       {/* Lateral com botões */}
@@ -16,7 +16,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
             key={value}
             value={value}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200
-              ${activeTab === value ? 'bg-blue-600 text-white' : 'text-zinc-300 hover:bg-zinc-700 hover:text-white'}`}
+              ${activeTab === value ? 'bg-orange-700 text-white' : 'text-zinc-300 hover:bg-zinc-700 hover:text-white'}`}
           >
             {Icon && <Icon className="w-5 h-5" />}
             {label}

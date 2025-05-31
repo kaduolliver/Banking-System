@@ -1,51 +1,36 @@
 ﻿import { useEffect, useState } from 'react';
-import UserTabs from '../components/UserComponents/UserTabs';
-import Client from '../components/UserComponents/Client';
-import Employee from '../components/UserComponents/Employee';
-import { UserIcon, SettingsIcon } from 'lucide-react'; 
-import Navbar from '../components/navbar';
+import ClientTabs from '../components/ClientComponents/ClientTabs';
+import EmployeeTabs from '../components/EmployeeComponents/EmployeeTabs';
+import ClientNavBar from '../components/ClientComponents/ClientNavBar';
+import EmpNavBar from '../components/EmployeeComponents/EmpNavBar';
 
 export default function User() {
-  const [activeTab, setActiveTab] = useState('perfil');
-  const [userType, setUserType] = useState(null); // 'client' ou 'employee'
+  const [userType, setUserType] = useState(null);
 
   useEffect(() => {
-    // Simulação do tipo de usuário (ex: vindo do backend ou contexto)
-    const fakeUserType = 'client'; // trocar para 'employee' para testar
-    setUserType(fakeUserType);
+    const tipo = localStorage.getItem('tipo');
+    if (!tipo) {
+      window.location.href = '/login';
+      return;
+    }
+    setUserType(tipo);
   }, []);
 
   if (!userType) return null;
 
-  const isClient = userType === 'client';
-  const contentComponent = isClient ? <Client /> : <Employee />;
-
-  const tabs = [
-    {
-      value: 'perfil',
-      label: 'Meu Perfil',
-      icon: UserIcon,
-      content: contentComponent,
-    },
-    {
-      value: 'config',
-      label: 'Configurações',
-      icon: SettingsIcon,
-      content: (
-        <div>
-          <h2 className="text-xl font-bold mb-2">Configurações</h2>
-          <p className="text-gray-300">Aqui você poderá configurar sua conta.</p>
-        </div>
-      ),
-    },
-  ];
+  const isClient = userType === 'cliente';
+  const UserNavBar = isClient ? <ClientNavBar /> : <EmpNavBar />;
+  const TabsComponent = isClient ? <ClientTabs /> : <EmployeeTabs />;
 
   return (
     <>
-    <Navbar />
-    <div className="min-h-screen flex items-center justify-center bg-cover p-6" style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}>
-      <UserTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
+      {UserNavBar}
+      <div
+        className="min-h-screen flex pt-40 pb-20 items-center justify-center bg-cover p-6"
+        style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}
+      >
+        {TabsComponent}
+      </div>
     </>
   );
 }

@@ -7,7 +7,7 @@ import PasswordField from './LoginFormComponents/PasswordField';
 import { User } from 'lucide-react';
 
 // Funções API fictícias, você implementa conforme seu backend
-import { LoginUsuario, VerificaOTP } from '../services/loginService';
+import { LoginUsuario, VerificaOTP } from '../services/auth/loginService';
 
 export default function AuthPage() {
   const [modo, setModo] = useState('login');
@@ -64,9 +64,12 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       const cpfLimpo = formData.usuario.replace(/\D/g, '');
+      
       const resposta = await VerificaOTP({ cpf: cpfLimpo, otp: formData.otp });
+
       localStorage.setItem('usuarioId', resposta.id_usuario);
-      // redirecionar para página protegida, por exemplo:
+      localStorage.setItem('tipo', resposta.tipo);
+
       window.location.href = '/user';
 
     } catch (err) {
