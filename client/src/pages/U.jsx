@@ -1,4 +1,4 @@
-Ôªøimport { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { verificarSessao } from '../services/auth/loginService';
 
@@ -11,13 +11,13 @@ export default function User() {
     const checarSessao = async () => {
       try {
         const sessao = await verificarSessao();
-        const tipo = sessao.tipo_usuario;
+        const tipo = sessao.tipo;
         if (tipo === 'cliente') navigate('/user/client');
         else if (tipo === 'funcionario') navigate('/user/employee');
-        else throw new Error('Tipo de usu√°rio desconhecido');
+        else throw new Error('Tipo de usu·rio desconhecido');
       } catch (error) {
-        console.error('Sess√£o inv√°lida ou expirada:', error);
-        setAlerta('Voc√™ precisa iniciar sess√£o para acessar esta p√°gina.');
+        console.error('Sess„o inv·lida ou expirada:', error);
+        setAlerta('VocÍ precisa iniciar sess„o para acessar esta p·gina.');
       } finally {
         setCarregando(false);
       }
@@ -42,5 +42,5 @@ export default function User() {
     );
   }
 
-  return null;
+  return null; // N„o precisa renderizar nada ? redireciona automaticamente
 }

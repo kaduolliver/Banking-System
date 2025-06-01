@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 import InitialsBar from "../components/EffectsComponents/InitialsBar";
-import Navbar from "../components/navbar";
 
 const images = [
     "/images/luxury-bg-about.jpg",
@@ -25,7 +24,7 @@ export default function About() {
     return (
         <>
             <ScreenOverlay />
-            <Navbar />
+            
             <div className="relative pt-20 min-h-screen overflow-hidden">
                 <AnimatePresence mode="wait">
                     <motion.div

@@ -4,6 +4,7 @@ from app.models.usuario import Usuario
 from app.models.cliente import Cliente
 from app.models.funcionario import Funcionario
 from datetime import datetime, timedelta
+from flask import session
 import bcrypt
 import random
 import string
@@ -106,7 +107,7 @@ def login_usuario(data):
         session.close()
 
 def validar_otp(data):
-    session = SessionLocal()
+    session_db = SessionLocal()
     try:
         cpf = data.get('cpf')
         otp = data.get('otp')
@@ -114,7 +115,7 @@ def validar_otp(data):
         if not cpf or not otp:
             return jsonify({'erro': 'CPF e OTP são obrigatórios.'}), 400
 
-        usuario = session.query(Usuario).filter_by(cpf=cpf, otp_ativo=True).first()
+        usuario = session_db.query(Usuario).filter_by(cpf=cpf, otp_ativo=True).first()
 
         if not usuario or usuario.otp_codigo != otp:
             return jsonify({'erro': 'OTP inválido ou não encontrado.'}), 400
@@ -125,14 +126,20 @@ def validar_otp(data):
         usuario.otp_codigo = None
         usuario.otp_expiracao = None
         usuario.otp_ativo = False
+        session['id_usuario'] = usuario.id_usuario  
+        session['tipo'] = usuario.tipo_usuario
 
-        session.commit()
+        session_db.commit()
 
-        return jsonify({'mensagem': 'Login completo!', 'id_usuario': usuario.id_usuario, 'tipo': usuario.tipo_usuario})
+        return jsonify({
+            'mensagem': 'Login completo!',
+            'id_usuario': usuario.id_usuario,
+            'tipo': usuario.tipo_usuario
+        })
 
     except Exception as e:
-        session.rollback()
+        session_db.rollback()
         return jsonify({'erro': str(e)}), 500
 
     finally:
-        session.close()
+        session_db.close()

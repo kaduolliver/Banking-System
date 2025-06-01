@@ -1,12 +1,13 @@
 export async function LoginUsuario(dados) {
-   
+
     try {
         const res = await fetch('http://localhost:5000/api/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
-            body: JSON.stringify(dados)
-    });
-    
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados),
+            credentials: 'include',
+        });
+
         const data = await res.json();
 
         if (!res.ok) {
@@ -26,17 +27,57 @@ export async function VerificaOTP(dados) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dados),
+            credentials: 'include',
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-            throw new Error(data.erro || 'Erro na verificaÁ„o do OTP.');
+            throw new Error(data.erro || 'Erro na verifica√ß√£o do OTP.');
         }
 
-        return data; 
+        return data;
     } catch (error) {
-        console.error('Erro na verificaÁ„o do OTP:', error.message);
+        console.error('Erro na verifica√ß√£o do OTP:', error.message);
         throw error;
     }
+}
+
+export async function verificarSessao() {
+    try {
+        const res = await fetch('http://localhost:5000/api/sessao', {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.erro || 'Sess√£o n√£o encontrada.');
+        }
+
+        return data;
+    } catch (error) {
+        console.error("Erro ao verificar sess√£o:", error.message);
+        throw error;
+    }
+}
+
+export async function logoutUsuario() {
+  try {
+    const res = await fetch('http://localhost:5000/api/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.erro || 'Erro no logout.');
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('Erro no logout:', error.message);
+    throw error;
+  }
 }

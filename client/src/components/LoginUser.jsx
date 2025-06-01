@@ -64,13 +64,19 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       const cpfLimpo = formData.usuario.replace(/\D/g, '');
-      
+
       const resposta = await VerificaOTP({ cpf: cpfLimpo, otp: formData.otp });
 
       localStorage.setItem('usuarioId', resposta.id_usuario);
       localStorage.setItem('tipo', resposta.tipo);
 
-      window.location.href = '/user';
+      if (resposta.tipo === 'cliente') {
+        window.location.href = '/user/client';
+      } else if (resposta.tipo === 'funcionario') {
+        window.location.href = '/user/employee';
+      } else {
+        alert('Tipo de usuário desconhecido.');
+      }
 
     } catch (err) {
       setErro(err.message || 'Código OTP inválido.');

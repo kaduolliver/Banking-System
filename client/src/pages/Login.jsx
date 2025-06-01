@@ -1,6 +1,6 @@
 import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 import AuthPage from "../components/LoginUser";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 
 export default function LoginUser() {
   return (

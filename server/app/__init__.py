@@ -9,7 +9,10 @@ def create_app():
     load_dotenv()
     app = Flask(__name__)
     app.secret_key = os.getenv("SECRET_KEY", "chave_fallback_insegura") 
-    CORS(app, supports_credentials=True)
+    
+    # Ajuste o origin para o domínio/porta do seu frontend React
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(cliente_bp)
     return app

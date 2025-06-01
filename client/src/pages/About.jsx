@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
 import InitialsBar from "../components/EffectsComponents/InitialsBar";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 
 
 export default function Home() {

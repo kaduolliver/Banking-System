@@ -2,7 +2,7 @@ import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TitleBar from "../components/EffectsComponents/TitleBar";
-import Navbar from "../components/navbar";
+import Navbar from "../components/Navbar";
 
 const App = () => {
     const [expandedId, setExpandedId] = useState(null);
