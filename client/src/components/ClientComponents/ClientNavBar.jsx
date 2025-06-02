@@ -1,19 +1,28 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Globe, Banknote, User, Bell, Landmark } from "lucide-react";
-import { logoutUsuario } from '../../services/auth/loginService'; // importe a função logout que criamos
+import { logoutUsuario } from '../../services/auth/loginService'; 
+import { useAuth } from '../../context/authContext';
 
 const ClientNavbar = () => {
   const navigate = useNavigate();
+  const { usuario, setUsuario } = useAuth();
 
   const handleLogout = async () => {
     try {
       await logoutUsuario();
       localStorage.removeItem('tipo');
+      setUsuario(null);
       navigate('/login');
     } catch (error) {
       alert('Erro ao fazer logout. Tente novamente.');
     }
   };
+
+  const perfilLink = usuario?.tipo_usuario === 'cliente'
+    ? '/user/client'
+    : usuario?.tipo_usuario === 'funcionario'
+    ? '/user/employee'
+    : '/user';
 
   return (
     <header className="bg-black text-white shadow-ms w-full fixed top-0 left-0 z-[50]">
@@ -23,7 +32,7 @@ const ClientNavbar = () => {
 
         {/* Navegação central */}
         <nav className="space-x-8 hidden md:flex gap-20" style={{ fontFamily: 'Aileron, sans-serif' }}>
-          <Link to="/user" className="group relative flex items-center gap-2 top-1 text-white font-bold transition hover:text-amber-400">
+          <Link to={perfilLink} className="group relative flex items-center gap-2 top-1 text-white font-bold transition hover:text-amber-400">
             <User className="relative bottom-1" />
             <span>Meu Perfil</span>
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>

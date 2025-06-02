@@ -41,7 +41,7 @@ def registrar_usuario(data):
         )
 
         session.add(novo_usuario)
-        session.flush()  # Garante que `id_usuario` seja gerado
+        session.flush() 
 
         if tipo == 'cliente':
             cliente = Cliente(id_usuario=novo_usuario.id_usuario, score_credito=0)

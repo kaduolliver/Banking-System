@@ -46,10 +46,6 @@ export default function ClientTabs() {
             //content: <ConfigServices />,
         },
     ];
-    <div
-        className="min-h-screen flex pt-40 pb-20 items-center justify-center bg-cover p-6"
-        style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}
-    >
-    </div>
+    
     return <UserTab tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />;
 }

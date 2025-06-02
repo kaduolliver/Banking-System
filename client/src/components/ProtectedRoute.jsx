@@ -1,24 +1,19 @@
 // components/ProtectedRoute.jsx
-import { useEffect, useState } from 'react';
+import { useAuth } from '../context/authContext';
 import { Navigate } from 'react-router-dom';
-import { verificarSessao } from '../services/auth/loginService';
 
-export default function ProtectedRoute({ children }) {
-  const [autenticado, setAutenticado] = useState(null);
+export default function ProtectedRoute({ children, tipoPermitido = null }) {
+  const { usuario, carregando } = useAuth();
 
-  useEffect(() => {
-    const checar = async () => {
-      try {
-        await verificarSessao();
-        setAutenticado(true);
-      } catch {
-        setAutenticado(false);
-      }
-    };
-    checar();
-  }, []);
+  if (carregando) return null;
 
-  if (autenticado === null) return null; // ou loading
+  if (!usuario) {
+    return <Navigate to="/login" replace />;
+  }
 
-  return autenticado ? children : <Navigate to="/user" replace />;
+  if (tipoPermitido && usuario.tipo_usuario !== tipoPermitido) {
+    return <Navigate to="/user" replace />;
+  }
+
+  return children;
 }

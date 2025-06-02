@@ -1,46 +1,35 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { verificarSessao } from '../services/auth/loginService';
+import { useAuth } from '../context/authContext';
 
 export default function User() {
-  const [carregando, setCarregando] = useState(true);
-  const [alerta, setAlerta] = useState('');
+  const { usuario, carregando } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checarSessao = async () => {
-      try {
-        const sessao = await verificarSessao();
-        const tipo = sessao.tipo_usuario;
-        if (tipo === 'cliente') navigate('/user/client');
-        else if (tipo === 'funcionario') navigate('/user/employee');
-        else throw new Error('Tipo de usuário desconhecido');
-      } catch (error) {
-        console.error('Sessão inválida ou expirada:', error);
-        setAlerta('Você precisa iniciar sessão para acessar esta página.');
-      } finally {
-        setCarregando(false);
+    if (!carregando) {
+      if (!usuario) {
+        navigate('/login');
+      } else if (usuario.tipo_usuario === 'cliente') {
+        navigate('/user/client');
+      } else if (usuario.tipo_usuario === 'funcionario') {
+        navigate('/user/employee');
+      } else {
+        navigate('/login');
       }
-    };
+    }
+  }, [usuario, carregando, navigate]);
 
-    checarSessao();
-  }, [navigate]);
-
-  if (carregando) return null;
-
-  if (alerta) {
+  // Enquanto estiver carregando, você pode exibir um loading, ou apenas o fundo preto
+  if (carregando) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100 text-center">
-        <p className="mb-4 text-red-600 font-semibold">{alerta}</p>
-        <a
-          href="/login"
-          className="px-6 py-3 bg-amber-600 text-white rounded hover:bg-amber-700 transition"
-        >
-          Ir para Login
-        </a>
+      <div className="min-h-screen w-full bg-black flex items-center justify-center">
+        {/* Opcional: loading spinner ou texto */}
+        {/* <p className="text-white">Carregando...</p> */}
       </div>
     );
   }
 
-  return null;
+  // Enquanto decide o redirecionamento, mantém o fundo para evitar o salto de layout
+  return <div className="min-h-screen w-full bg-black" />;
 }
