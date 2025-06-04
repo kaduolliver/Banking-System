@@ -6,7 +6,7 @@ export default function LoginUser() {
   return (
     <>
       <ScreenOverlay />
-      <Navbar />
+      {/* <Navbar /> */}
       <div
         className="pt-20 bg-cover bg-center bg-fixed bg-black animate-fade-in delay-[500ms] min-h-screen"
         style={{ backgroundImage: "url('/images/bg-login.jpg')" }}>

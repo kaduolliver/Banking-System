@@ -2,23 +2,17 @@ import ScreenOverlay from "../components/EffectsComponents/ScreenOverlay";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TitleBar from "../components/EffectsComponents/TitleBar";
+import NavbarSwitcher from "../components/EffectsComponents/NavBarSwitcher";
+import { useAuth } from '../context/authContext';
+import ClientNavbar from '../components/ClientComponents/ClientNavBar';
+import EmpNavBar from '../components/EmployeeComponents/EmpNavBar';
 
-// --- NOVOS IMPORTS AQUI ---
-import { useAuth } from '../context/authContext'; // Importe o hook do seu AuthContext
-import Navbar from '../components/Navbar'; // Importe a Navbar padrão
-import ClientNavbar from '../components/ClientComponents/ClientNavBar'; // Importe a Navbar do cliente
-import EmpNavBar from '../components/EmployeeComponents/EmpNavBar';     // Importe a Navbar do funcionário
-// --- FIM DOS NOVOS IMPORTS ---
-
-
-const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
+const CreditCard = () => {
     const [expandedId, setExpandedId] = useState(null);
     const [selectedId, setSelectedId] = useState(null);
 
-    // --- CONSUMA O AUTH CONTEXT AQUI ---
     const { usuario, isLoadingAuth } = useAuth();
     const tipoUsuario = usuario?.tipo_usuario;
-    // --- FIM DO CONSUMO DO AUTH CONTEXT ---
 
     const cards = [
         {
@@ -47,7 +41,6 @@ const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
 
     const selectedCard = cards.find((card) => card.id === selectedId);
 
-    // --- RENDERIZAÇÃO CONDICIONAL PARA LOADING DA NAVBAR ---
     if (isLoadingAuth) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -55,7 +48,6 @@ const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
             </div>
         );
     }
-    // --- FIM DA RENDERIZAÇÃO CONDICIONAL ---
 
     return (
         <>
@@ -65,15 +57,15 @@ const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
                 className="relative min-h-[100vh] bg-cover bg-fixed bg-center bg-black pt-48 pb-24 animate-fade-in delay-[500ms]"
                 style={{ backgroundImage: "url('/images/Legacy-Credit-Card-bg-2.png')" }}
             >
-                {/* --- RENDERIZAÇÃO MANUAL DA NAVBAR AQUI --- */}
+
                 {tipoUsuario === 'cliente' ? (
                     <ClientNavbar />
                 ) : tipoUsuario === 'funcionario' ? (
                     <EmpNavBar />
                 ) : (
-                    <Navbar />
+                    <NavbarSwitcher />
                 )}
-                {/* --- FIM DA RENDERIZAÇÃO MANUAL DA NAVBAR --- */}
+
 
                 <TitleBar title="Seja membro Infinity & Legacy" className="z-30" />
                 <div className="flex items-center justify-center w-full p-6">
@@ -192,5 +184,4 @@ const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
     );
 };
 
-// --- EXPORTAR O COMPONENTE COM O NOME CORRETO, ex: CreditCard ---
 export default CreditCard;

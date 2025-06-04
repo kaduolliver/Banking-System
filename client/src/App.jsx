@@ -18,6 +18,7 @@ import ScrollToTop from './components/EffectsComponents/ScrollToTop';
 import SplashScreen from './components/EffectsComponents/SplashScreen';
 import Footer from './components/Footer';
 import { useAuth } from './context/authContext';
+import NavbarSwitcher from './components/EffectsComponents/NavBarSwitcher';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -39,18 +40,9 @@ export default function App() {
         <div className="main-container">
           {/* Header */}
           <header className="header-content">
-            {!ocultarNavbar.includes(location.pathname) && (
-              <>
-                {tipoUsuario === 'cliente' ? (
-                  <ClientNavbar />
-                ) : tipoUsuario === 'funcionario' ? (
-                  <EmpNavBar />
-                ) : (
-                  <Navbar />
-                )}
-              </>
-            )}
+            <NavbarSwitcher />
           </header>
+
 
           <ScrollToTop />
 

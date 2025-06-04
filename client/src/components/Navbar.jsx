@@ -3,7 +3,7 @@ import { FaLock, FaGlobe } from "react-icons/fa";
 
 const Navbar = () => {
   return (
-    <header className="bg-black text-white shadow-ms w-full fixed top-0 left-0 z-[50]">
+    <header className="bg-black text-white shadow-ms w-full top-0 left-0 z-[50]">
       <div className="w-full mx-auto px-6 py-6 flex items-center justify-between">
         {/* Logo à esquerda */}
         <Link to="/" className="text-5xl relative left-10" style={{ fontFamily: 'Bodoni FLF' }}> I&L </Link>
