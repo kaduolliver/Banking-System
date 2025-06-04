@@ -1,7 +1,10 @@
-import * as Tabs from '@radix-ui/react-tabs'
-import { motion, AnimatePresence } from 'framer-motion'
+import * as Tabs from '@radix-ui/react-tabs';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function UserTabs({ tabs, activeTab, setActiveTab }) {
+  // Encontra o tab ativo para renderizar somente ele no AnimatePresence
+  const active = tabs.find(tab => tab.value === activeTab);
+
   return (
     <Tabs.Root
       value={activeTab}
@@ -25,24 +28,22 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
 
       <div className="flex-1 p-6 relative overflow-hidden">
         <AnimatePresence mode="wait">
-          {tabs.map(({ value, content }) => (
-            <Tabs.Content key={value} value={value} asChild forceMount>
-              {activeTab === value && (
-                <motion.div
-                  key={value}
-                  initial={{ opacity: 0, filter: 'blur(10px)' }}
-                  animate={{ opacity: 1, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, filter: 'blur(10px)' }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                  className="absolute inset-0"
-                >
-                  <div className="text-white text-base">{content}</div>
-                </motion.div>
-              )}
+          {active && (
+            <Tabs.Content key={active.value} value={active.value} asChild forceMount>
+              <motion.div
+                key={active.value}
+                initial={{ opacity: 0, filter: 'blur(10px)' }}
+                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="absolute inset-0"
+              >
+                <div className="text-white text-base">{active.content}</div>
+              </motion.div>
             </Tabs.Content>
-          ))}
+          )}
         </AnimatePresence>
       </div>
     </Tabs.Root>
-  )
+  );
 }

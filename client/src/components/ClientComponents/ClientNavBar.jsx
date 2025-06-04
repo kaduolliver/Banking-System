@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Globe, Banknote, User, Bell, Landmark } from "lucide-react";
-import { logoutUsuario } from '../../services/auth/loginService'; 
+import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake } from "lucide-react";
+import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
 
 const ClientNavbar = () => {
@@ -21,8 +21,8 @@ const ClientNavbar = () => {
   const perfilLink = usuario?.tipo_usuario === 'cliente'
     ? '/user/client'
     : usuario?.tipo_usuario === 'funcionario'
-    ? '/user/employee'
-    : '/user';
+      ? '/user/employee'
+      : '/user';
 
   return (
     <header className="bg-black text-white shadow-ms w-full fixed top-0 left-0 z-[50]">
@@ -32,18 +32,26 @@ const ClientNavbar = () => {
 
         {/* Navegação central */}
         <nav className="space-x-8 hidden md:flex gap-20" style={{ fontFamily: 'Aileron, sans-serif' }}>
-          <Link to={perfilLink} className="group relative flex items-center gap-2 top-1 text-white font-bold transition hover:text-amber-400">
-            <User className="relative bottom-1" />
-            <span>Meu Perfil</span>
-            <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
-          </Link>
+
+          <a className="text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
+            <Handshake />
+            Olá, {usuario?.nome ? usuario.nome.split(' ').slice(0, 2).join(' ') : 'usuário'}
+          </a>
+
           <Link to="/market" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400" style={{ fontFamily: 'Aileron, sans-serif' }}>
             <Landmark />
             <span className="relative top-1">Mercado</span>
             <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
           </Link>
+
+          <Link to={perfilLink} className="group relative flex items-center gap-2 top-1 text-white font-bold transition hover:text-amber-400">
+            <User className="relative bottom-1" />
+            <span>Meu Perfil</span>
+            <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+
           <Link
-            to="/login"
+            to="/"
             className="hover:text-amber-400 flex font-bold items-center gap-2 transition relative top-1"
           >
             <Banknote />
@@ -55,9 +63,10 @@ const ClientNavbar = () => {
         <div className="relative right-10 flex items-center gap-10" style={{ fontFamily: 'Aileron, sans-serif' }}>
           <button
             onClick={handleLogout}
-            className="px-6 py-2 relative left-4 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-orange-700 hover:to-amber-600 text-white font-bold rounded-lg transition"
+            className="flex gap-4 px-6 py-2 top-1 relative left-4 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-orange-700 hover:to-amber-600 text-white font-bold rounded-lg transition"
           >
-            Encerrar Sessão
+            <LogOut />
+            Sair
           </button>
           <button className="hover:text-amber-400 transition relative left-5" title="Notificações">
             <Bell className="size-7" />

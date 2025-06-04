@@ -175,7 +175,7 @@ const CreditCard = () => { // Renomeado App para CreditCard para maior clareza
                                     {selectedCard.title}
                                 </motion.h2>
                                 <p className="text-gray-300 mb-4 text-base">
-                                    <strong className="text-white">{selectedCard.title}</strong><br/>{selectedCard.cardDescription}
+                                    <strong className="text-white">{selectedCard.title}</strong><br />{selectedCard.cardDescription}
                                 </p>
                                 <button
                                     onClick={() => setSelectedId(null)}

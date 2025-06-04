@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegisterUser from './RegisterUser';
 import FormContainer from './LoginFormComponents/FormContainer';
 import InputField from './LoginFormComponents/InputField';
 import PasswordField from './LoginFormComponents/PasswordField';
 import { User } from 'lucide-react';
-
-// Funções API fictícias, você implementa conforme seu backend
 import { LoginUsuario, VerificaOTP } from '../services/auth/loginService';
+import { useAuth } from '../context/authContext';
+import { useNavigate } from 'react-router-dom';
+import SplashScreen from './EffectsComponents/SplashScreen'; // Importa a splash screen
 
 export default function AuthPage() {
   const [modo, setModo] = useState('login');
@@ -15,6 +16,36 @@ export default function AuthPage() {
   const [erro, setErro] = useState('');
   const [precisaOTP, setPrecisaOTP] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('');
+
+  const { setUsuario } = useAuth();
+  const navigate = useNavigate();
+
+  // Redireciona após splash completar
+  const handleSplashComplete = () => {
+    if (redirectPath) {
+      navigate(redirectPath);
+    }
+  };
+
+  const exibirSplashERedirecionar = (resposta) => {
+    setUsuario({
+      id: resposta.id_usuario,
+      tipo_usuario: resposta.tipo,
+      nome: resposta.nome || '',
+    });
+
+    localStorage.setItem('usuarioId', resposta.id_usuario);
+    localStorage.setItem('tipo', resposta.tipo);
+
+    let path = '/user';
+    if (resposta.tipo === 'cliente') path = '/user/client';
+    else if (resposta.tipo === 'funcionario') path = '/user/employee';
+
+    setRedirectPath(path);
+    setShowSplash(true);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +53,6 @@ export default function AuthPage() {
     setErro('');
   };
 
-  // Primeiro submit: CPF + senha
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
@@ -33,17 +63,14 @@ export default function AuthPage() {
 
     setIsLoading(true);
     try {
-      const cpfLimpo = formData.usuario.replace(/\D/g, '');  // remove tudo que não é dígito
-
+      const cpfLimpo = formData.usuario.replace(/\D/g, '');
       const resposta = await LoginUsuario({ cpf: cpfLimpo, senha: formData.senha });
 
       if (resposta.precisa_otp) {
         setPrecisaOTP(true);
         setErro('Insira o código OTP enviado para você.');
       } else {
-        // Login completo, redireciona ou salva sessão
-        alert('Login realizado com sucesso!');
-        // TODO: salvar token/session e redirecionar
+        exibirSplashERedirecionar(resposta);
       }
     } catch (err) {
       setErro(err.message || 'Erro no login.');
@@ -52,7 +79,6 @@ export default function AuthPage() {
     }
   };
 
-  // Segundo submit: enviar OTP
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
 
@@ -64,26 +90,20 @@ export default function AuthPage() {
     setIsLoading(true);
     try {
       const cpfLimpo = formData.usuario.replace(/\D/g, '');
-
       const resposta = await VerificaOTP({ cpf: cpfLimpo, otp: formData.otp });
 
-      localStorage.setItem('usuarioId', resposta.id_usuario);
-      localStorage.setItem('tipo', resposta.tipo);
-
-      if (resposta.tipo === 'cliente') {
-        window.location.href = '/user/client';
-      } else if (resposta.tipo === 'funcionario') {
-        window.location.href = '/user/employee';
-      } else {
-        alert('Tipo de usuário desconhecido.');
-      }
-
+      exibirSplashERedirecionar(resposta);
     } catch (err) {
       setErro(err.message || 'Código OTP inválido.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // ⛔ Se o splash está visível, mostra só ele
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -102,7 +122,6 @@ export default function AuthPage() {
                 onSubmit={precisaOTP ? handleOtpSubmit : handleLoginSubmit}
                 icon={<User className="text-amber-600" />}
               >
-                {/* Sempre CPF */}
                 <InputField
                   label="CPF"
                   name="usuario"
@@ -110,10 +129,8 @@ export default function AuthPage() {
                   value={formData.usuario}
                   onChange={handleChange}
                   icon={User}
-                  disabled={precisaOTP} // bloqueia CPF no passo OTP
+                  disabled={precisaOTP}
                 />
-
-                {/* Se não precisa OTP, mostra campo senha */}
                 {!precisaOTP && (
                   <PasswordField
                     label="Senha"
@@ -122,8 +139,6 @@ export default function AuthPage() {
                     onChange={handleChange}
                   />
                 )}
-
-                {/* Se precisa OTP, mostra campo OTP */}
                 {precisaOTP && (
                   <InputField
                     label="Código OTP"
@@ -133,7 +148,6 @@ export default function AuthPage() {
                     maxLength={6}
                   />
                 )}
-
                 <AnimatePresence>
                   {erro && (
                     <motion.p
@@ -147,7 +161,6 @@ export default function AuthPage() {
                     </motion.p>
                   )}
                 </AnimatePresence>
-
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.96 }}
@@ -157,7 +170,6 @@ export default function AuthPage() {
                 >
                   {precisaOTP ? 'Validar OTP' : 'Entrar'}
                 </motion.button>
-
                 {!precisaOTP && (
                   <p className="text-sm mt-4 text-center text-gray-600 dark:text-gray-400">
                     Não tem uma conta?{' '}

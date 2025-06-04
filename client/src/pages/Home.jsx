@@ -11,7 +11,7 @@ const images = [
     "/images/exchange-bg-about.jpg"
 ];
 
-export default function About() {
+export default function Home() {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {

@@ -96,7 +96,11 @@ def login_usuario(data):
         return jsonify({
             'mensagem': 'OTP enviado para validação.',
             'precisa_otp': True,
-            'id_usuario': usuario.id_usuario
+            'id_usuario': usuario.id_usuario,
+            'tipo': usuario.tipo_usuario,
+            'nome': usuario.nome,
+            'cpf': usuario.cpf,
+            'telefone': usuario.telefone
         })
 
     except Exception as e:
@@ -134,7 +138,10 @@ def validar_otp(data):
         return jsonify({
             'mensagem': 'Login completo!',
             'id_usuario': usuario.id_usuario,
-            'tipo': usuario.tipo_usuario
+            'cpf': usuario.cpf,
+            'telefone': usuario.telefone,
+            'tipo': usuario.tipo_usuario,
+            'nome': usuario.nome
         })
 
     except Exception as e:

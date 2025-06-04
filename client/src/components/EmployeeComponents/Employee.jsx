@@ -1,8 +1,16 @@
+import EmployeeNavbar from "./EmpNavBar";
+import EmployeeTabs from "./EmployeeTabs";
+import ScreenOverlay from "../EffectsComponents/ScreenOverlay";
+
 export default function Employee() {
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-2">Painel do Funcionário</h2>
-      <p className="text-gray-300">Aqui será exibida a lógica de negócios para funcionários futuramente.</p>
-    </div>
+    <>
+    <ScreenOverlay />
+      <EmployeeNavbar />
+      <div className="min-h-screen flex pt-40 pb-20 bg-black items-center justify-center bg-cover p-6"
+        style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}>
+        <EmployeeTabs />
+      </div>
+    </>
   );
 }
