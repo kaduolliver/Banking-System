@@ -10,9 +10,6 @@ import User from './pages/User';
 import CreditCard from './pages/CreditCard';
 import Client from './components/ClientComponents/Client';
 import Employee from './components/EmployeeComponents/Employee';
-import Navbar from './components/Navbar';
-import ClientNavbar from './components/ClientComponents/ClientNavBar';
-import EmpNavBar from './components/EmployeeComponents/EmpNavBar';
 import ProtectedRoute from './components/ProtectedRoute';
 import ScrollToTop from './components/EffectsComponents/ScrollToTop';
 import SplashScreen from './components/EffectsComponents/SplashScreen';
@@ -24,11 +21,9 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const location = useLocation();
 
-  const { carregando, usuario } = useAuth();
-  const tipoUsuario = usuario?.tipo_usuario;
+  const { carregando } = useAuth();
 
   const ocultarFooter = [];
-  const ocultarNavbar = ['/creditcard'];
 
   return (
     <>
@@ -42,7 +37,6 @@ export default function App() {
           <header className="header-content">
             <NavbarSwitcher />
           </header>
-
 
           <ScrollToTop />
 

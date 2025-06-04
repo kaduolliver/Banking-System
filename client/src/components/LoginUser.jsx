@@ -8,9 +8,9 @@ import { User } from 'lucide-react';
 import { LoginUsuario, VerificaOTP } from '../services/auth/loginService';
 import { useAuth } from '../context/authContext';
 import { useNavigate } from 'react-router-dom';
-import SplashScreen from './EffectsComponents/SplashScreen'; // Importa a splash screen
+import SplashScreen from './EffectsComponents/SplashScreen';
 
-export default function AuthPage() {
+export default function LoginAndRegister() {
   const [modo, setModo] = useState('login');
   const [formData, setFormData] = useState({ usuario: '', senha: '', otp: '' });
   const [erro, setErro] = useState('');
@@ -22,7 +22,6 @@ export default function AuthPage() {
   const { setUsuario } = useAuth();
   const navigate = useNavigate();
 
-  // Redireciona após splash completar
   const handleSplashComplete = () => {
     if (redirectPath) {
       navigate(redirectPath);
@@ -100,7 +99,6 @@ export default function AuthPage() {
     }
   };
 
-  // ⛔ Se o splash está visível, mostra só ele
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />;
   }

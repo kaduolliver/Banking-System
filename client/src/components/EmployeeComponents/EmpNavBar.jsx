@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Globe, Handshake, ShieldUser, Bell, Landmark, LogOut } from "lucide-react";
 import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
-import NotificationPanel from "../UserComponents/NotificationPanel"; // ajuste o caminho conforme necessário
+import NotificationPanel from "../UserComponents/NotificationPanel";
 
 const EmployeeNavbar = () => {
   const navigate = useNavigate();

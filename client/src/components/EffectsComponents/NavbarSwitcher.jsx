@@ -16,8 +16,8 @@ const NavbarSwitcher = () => {
     const { usuario } = useAuth();
     const tipoUsuario = usuario?.tipo_usuario;
 
-    const ocultarNavbar = ['/creditcard'];
-    if (ocultarNavbar.includes(location.pathname)) return null;
+    // const ocultarNavbar = ['/creditcard'];
+    // if (ocultarNavbar.includes(location.pathname)) return null;
 
     const NavbarComponent = tipoUsuario === 'cliente'
         ? ClientNavbar

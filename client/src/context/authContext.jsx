@@ -11,7 +11,11 @@ export function AuthProvider({ children }) {
     const carregarSessao = async () => {
       try {
         const sessao = await verificarSessao();
-        setUsuario(sessao);
+        if (sessao.autenticado) {
+          setUsuario(sessao);
+        } else {
+          setUsuario(null);
+        }
       } catch {
         setUsuario(null);
       } finally {

@@ -3,11 +3,12 @@ import ClientTabs from './ClientTabs';
 import ClientNavbar from './ClientNavBar';
 import ScreenOverlay from '../EffectsComponents/ScreenOverlay';
 import { Navigate } from 'react-router-dom';
+import SplashScreen from '../EffectsComponents/SplashScreen';
 
 export default function Client() {
   const { carregando, usuario } = useAuth();
 
-  if (carregando) return null;
+  if (carregando) return <SplashScreen />;
 
   if (usuario?.tipo_usuario !== 'cliente') return <Navigate to="/login" />;
 

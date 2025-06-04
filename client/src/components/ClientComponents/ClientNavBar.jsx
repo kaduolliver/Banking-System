@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake, X } from "lucide-react";
+import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake } from "lucide-react";
 import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
@@ -29,8 +29,7 @@ const ClientNavbar = () => {
     try {
       await logoutUsuario();
       localStorage.removeItem('tipo');
-      setUsuario(null);
-      navigate('/login');
+      setUsuario(null); 
     } catch (error) {
       alert('Erro ao fazer logout. Tente novamente.');
     }
