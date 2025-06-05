@@ -35,7 +35,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
                 initial={{ opacity: 0, filter: 'blur(10px)' }}
                 animate={{ opacity: 1, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, filter: 'blur(10px)' }}
-                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
                 className="absolute inset-0"
               >
                 <div className="text-white text-base">{active.content}</div>

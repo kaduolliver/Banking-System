@@ -25,15 +25,14 @@ export function AuthProvider({ children }) {
     carregarSessao();
   }, []);
 
-  // Função logout centralizada no contexto
   const logout = async () => {
     try {
-      await logoutUsuario();       // Chama a API para invalidar sessão no backend (se necessário)
+      await logoutUsuario();      
     } catch (error) {
       console.error('Erro no logout:', error);
     }
-    localStorage.removeItem('tipo'); // Remove item local
-    setUsuario(null);                // Atualiza estado para deslogado
+    localStorage.removeItem('tipo'); 
+    setUsuario(null);               
   };
 
   return (

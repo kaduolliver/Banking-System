@@ -32,6 +32,7 @@ def verificar_sessao():
                 'nome': usuario.nome,
                 'cpf': usuario.cpf,
                 'telefone': usuario.telefone,
+                'data_nascimento': usuario.data_nascimento,
                 'tipo_usuario': usuario.tipo_usuario
             }), 200
         finally:

@@ -2,10 +2,10 @@ import { useAuth } from '../../context/authContext';
 import ClientTabs from './ClientTabs';
 import ClientNavbar from './ClientNavBar';
 import ScreenOverlay from '../EffectsComponents/ScreenOverlay';
-import { Navigate } from 'react-router-dom';
 import SplashScreen from '../EffectsComponents/SplashScreen';
 
 export default function Client() {
+
   const { carregando } = useAuth();
 
   if (carregando) return <SplashScreen />;

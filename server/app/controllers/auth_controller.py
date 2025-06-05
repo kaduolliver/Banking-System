@@ -18,7 +18,7 @@ def registrar_usuario(data):
     try:
         nome = data.get('nome')
         cpf = data.get('cpf')
-        nascimento = data.get('data_nascimento')
+        nascimento_str = data.get('data_nascimento')
         telefone = data.get('telefone')
         tipo = data.get('tipo_usuario')
         senha = data.get('senha')
@@ -26,8 +26,13 @@ def registrar_usuario(data):
         if tipo not in ['cliente', 'funcionario']:
             return jsonify({"erro": "Tipo de usuário inválido"}), 400
 
-        if not all([nome, cpf, nascimento, telefone, tipo, senha]):
+        if not all([nome, cpf, nascimento_str, telefone, tipo, senha]):
             return jsonify({"erro": "Preencha todos os campos obrigatórios."}), 400
+        
+        try:
+            nascimento = datetime.strptime(nascimento_str, "%Y-%m-%d").date()
+        except ValueError:
+            return jsonify({"erro": "Data de nascimento em formato inválido. Use YYYY-MM-DD."}), 400
 
         senha_hash = bcrypt.hashpw(senha.encode(), bcrypt.gensalt()).decode()
 
@@ -100,6 +105,7 @@ def login_usuario(data):
             'tipo': usuario.tipo_usuario,
             'nome': usuario.nome,
             'cpf': usuario.cpf,
+            'data_nascimento': usuario.data_nascimento.isoformat(),
             'telefone': usuario.telefone
         })
 
@@ -141,6 +147,7 @@ def validar_otp(data):
             'cpf': usuario.cpf,
             'telefone': usuario.telefone,
             'tipo': usuario.tipo_usuario,
+            'data_nascimento': usuario.data_nascimento.isoformat(),
             'nome': usuario.nome
         })
 

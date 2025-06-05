@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UserIcon, SettingsIcon, CircleDollarSign, Wallet, Bitcoin, CreditCard } from 'lucide-react';
 import UserTab from '../UserComponents/UserTab';
 //import AccountPanel from './ClientAccountPanel';
-//import PersonalData from './ClientPersonalData';
+import PersonalData from './ClientPersonalData';
 import FinancialServices from './ClientFinancialServices';
 
 export default function ClientTabs() {
@@ -19,7 +19,7 @@ export default function ClientTabs() {
             value: 'dados',
             label: 'Dados Pessoais',
             icon: UserIcon,
-            //content: <PersonalData />,
+            content: <PersonalData />,
         },
         {
             value: 'servicos',

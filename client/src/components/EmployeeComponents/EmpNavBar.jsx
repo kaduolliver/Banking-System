@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Globe, Handshake, ShieldUser, Bell, Landmark, LogOut } from "lucide-react";
-import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
 
 const EmployeeNavbar = () => {
   const navigate = useNavigate();
-  const { usuario, setUsuario } = useAuth();
+  const { usuario, logout } = useAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -15,15 +14,9 @@ const EmployeeNavbar = () => {
     { titulo: "Sistema", mensagem: "Manutenção programada amanhã às 22h." }
   ]);
 
-  const handleLogout = async () => {
-    try {
-      await logoutUsuario();
-      localStorage.removeItem('tipo');
-      navigate('/login');
-      setUsuario(null);
-    } catch (error) {
-      alert('Erro ao fazer logout. Tente novamente.');
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const perfilLink = usuario?.tipo_usuario === 'cliente'
