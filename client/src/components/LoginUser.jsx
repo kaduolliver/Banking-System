@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RegisterUser from './RegisterUser';
 import FormContainer from './LoginFormComponents/FormContainer';
@@ -23,10 +23,12 @@ export default function LoginAndRegister() {
   const navigate = useNavigate();
 
   const handleSplashComplete = () => {
+    localStorage.removeItem('mostrandoSplash');
     if (redirectPath) {
       navigate(redirectPath);
     }
   };
+
 
   const exibirSplashERedirecionar = (resposta) => {
     setUsuario({
@@ -37,6 +39,7 @@ export default function LoginAndRegister() {
 
     localStorage.setItem('usuarioId', resposta.id_usuario);
     localStorage.setItem('tipo', resposta.tipo);
+    localStorage.setItem('mostrandoSplash', 'true');
 
     let path = '/user';
     if (resposta.tipo === 'cliente') path = '/user/client';

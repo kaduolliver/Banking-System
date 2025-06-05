@@ -16,6 +16,7 @@ import SplashScreen from './components/EffectsComponents/SplashScreen';
 import Footer from './components/Footer';
 import { useAuth } from './context/authContext';
 import NavbarSwitcher from './components/EffectsComponents/NavBarSwitcher';
+import PublicRoute from './components/PublicRoute';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -24,6 +25,7 @@ export default function App() {
   const { carregando } = useAuth();
 
   const ocultarFooter = [];
+  const ocultarNavbar = ['/creditcard'];
 
   return (
     <>
@@ -34,9 +36,11 @@ export default function App() {
       {!showSplash && !carregando && (
         <div className="main-container">
           {/* Header */}
-          <header className="header-content">
-            <NavbarSwitcher />
-          </header>
+          {!ocultarNavbar.includes(location.pathname) && (
+            <header className="header-content">
+              <NavbarSwitcher />
+            </header>
+          )}
 
           <ScrollToTop />
 
@@ -44,7 +48,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/market" element={<Market />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/about" element={<About />} />
               <Route path="/user" element={<ProtectedRoute><User /></ProtectedRoute>} />
               <Route path="/user/client" element={<ProtectedRoute tipoPermitido="cliente"><Client /></ProtectedRoute>} />

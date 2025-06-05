@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake } from "lucide-react";
 import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
 
 const ClientNavbar = () => {
-  const navigate = useNavigate();
   const { usuario, setUsuario } = useAuth();
 
   const [showNotifications, setShowNotifications] = useState(false);

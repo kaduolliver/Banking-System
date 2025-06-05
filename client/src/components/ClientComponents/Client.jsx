@@ -6,11 +6,9 @@ import { Navigate } from 'react-router-dom';
 import SplashScreen from '../EffectsComponents/SplashScreen';
 
 export default function Client() {
-  const { carregando, usuario } = useAuth();
+  const { carregando } = useAuth();
 
   if (carregando) return <SplashScreen />;
-
-  if (usuario?.tipo_usuario !== 'cliente') return <Navigate to="/login" />;
 
   return (
     <>

@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import TitleBar from "../components/EffectsComponents/TitleBar";
 import NavbarSwitcher from "../components/EffectsComponents/NavBarSwitcher";
 import { useAuth } from '../context/authContext';
-import ClientNavbar from '../components/ClientComponents/ClientNavBar';
-import EmpNavBar from '../components/EmployeeComponents/EmpNavBar';
 
 const CreditCard = () => {
     const [expandedId, setExpandedId] = useState(null);
@@ -57,16 +55,7 @@ const CreditCard = () => {
                 className="relative min-h-[100vh] bg-cover bg-fixed bg-center bg-black pt-48 pb-24 animate-fade-in delay-[500ms]"
                 style={{ backgroundImage: "url('/images/Legacy-Credit-Card-bg-2.png')" }}
             >
-
-                {tipoUsuario === 'cliente' ? (
-                    <ClientNavbar />
-                ) : tipoUsuario === 'funcionario' ? (
-                    <EmpNavBar />
-                ) : (
-                    <NavbarSwitcher />
-                )}
-
-
+                <NavbarSwitcher />
                 <TitleBar title="Seja membro Infinity & Legacy" className="z-30" />
                 <div className="flex items-center justify-center w-full p-6">
                     <div className="grid grid-cols-2 gap-6">
