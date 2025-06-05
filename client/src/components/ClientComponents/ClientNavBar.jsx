@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake } from "lucide-react";
-import { logoutUsuario } from '../../services/auth/loginService';
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
 
 const ClientNavbar = () => {
-  const { usuario, setUsuario } = useAuth();
+  const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -24,14 +24,9 @@ const ClientNavbar = () => {
     }
   ]);
 
-  const handleLogout = async () => {
-    try {
-      await logoutUsuario();
-      localStorage.removeItem('tipo');
-      setUsuario(null); 
-    } catch (error) {
-      alert('Erro ao fazer logout. Tente novamente.');
-    }
+  const handleLogout = () => {
+    logout();   // limpa usuário e storage
+    navigate('/');  // manda para home após logout
   };
 
   const removeNotification = (index) => {
