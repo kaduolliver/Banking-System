@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { UserIcon, SettingsIcon, CircleDollarSign, Wallet, Bitcoin, CreditCard } from 'lucide-react';
 import UserTab from '../UserComponents/UserTab';
-//import AccountPanel from './ClientAccountPanel';
-import PersonalData from './ClientPersonalData';
-import FinancialServices from './ClientFinancialServices';
+import AccountPanel from './ClientTabs/ClientAccountPanel';
+import PersonalData from './ClientTabs/ClientPersonalData';
+import FinancialServices from './ClientTabs/ClientFinancialServices';
 
 export default function ClientTabs() {
     const [activeTab, setActiveTab] = useState('conta');
@@ -13,7 +13,7 @@ export default function ClientTabs() {
             value: 'conta',
             label: 'Minha Conta',
             icon: Wallet,
-            //content: <AccountPanel />,
+            content: <AccountPanel />,
         },
         {
             value: 'dados',

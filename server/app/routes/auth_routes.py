@@ -1,44 +1,27 @@
 from flask import Blueprint, request, jsonify, session
-from app.controllers.auth_controller import registrar_usuario, login_usuario, validar_otp
-from app.database.db import SessionLocal
-from app.models.usuario import Usuario
+from app.controllers.auth_controller import registrar_usuario, login_usuario, validar_otp, verificar_sessao
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/api/register', methods=['POST'])
 def register():
-    return registrar_usuario(request.json)
+    resposta, status = registrar_usuario(request.json)
+    return jsonify(resposta), status
 
 @auth_bp.route('/api/login', methods=['POST'])
 def login():
-    return login_usuario(request.json)
+    resposta, status = login_usuario(request.json)
+    return jsonify(resposta), status
 
 @auth_bp.route('/api/validar-otp', methods=['POST'])
 def validar_otp_route():
-    return validar_otp(request.json)
+    resposta, status = validar_otp(request.json)
+    return jsonify(resposta), status
 
 @auth_bp.route('/api/sessao', methods=['GET'])
-def verificar_sessao():
-    if 'id_usuario' in session:
-        db = SessionLocal()
-        try:
-            usuario = db.query(Usuario).filter_by(id_usuario=session['id_usuario']).first()
-            if not usuario:
-                return jsonify({'erro': 'Usuário não encontrado'}), 404
-
-            return jsonify({
-                'autenticado': True,
-                'id_usuario': usuario.id_usuario,
-                'nome': usuario.nome,
-                'cpf': usuario.cpf,
-                'telefone': usuario.telefone,
-                'data_nascimento': usuario.data_nascimento,
-                'tipo_usuario': usuario.tipo_usuario
-            }), 200
-        finally:
-            db.close()
-    else:
-        return jsonify({'autenticado': False}), 401
+def verificar_sessao_route():
+    resposta, status = verificar_sessao()
+    return jsonify(resposta), status
 
 @auth_bp.route('/api/logout', methods=['POST'])
 def logout():

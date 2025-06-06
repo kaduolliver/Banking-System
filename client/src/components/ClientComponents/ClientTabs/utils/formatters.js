@@ -28,3 +28,13 @@ export function capitalize(str) {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export function validarTelefone(telefone) {
+  const regex = /^\(\d{2}\)\s\d{5}-\d{4}$/;
+  return regex.test(telefone);
+}
+
+export function formatCEP(cep) {
+    const digits = cep.replace(/\D/g, '');
+    return digits.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+}

@@ -7,36 +7,45 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    const carregarSessao = async () => {
-      try {
-        const sessao = await verificarSessao();
-        if (sessao.autenticado) {
-          setUsuario(sessao);
-        } else {
-          setUsuario(null);
-        }
-      } catch {
+  const carregarSessao = async () => {
+    setCarregando(true);
+    try {
+      const sessao = await verificarSessao();
+      if (sessao.autenticado) {
+        setUsuario(sessao.usuario);
+      } else {
         setUsuario(null);
-      } finally {
-        setCarregando(false);
       }
-    };
-    carregarSessao();
+    } catch {
+      setUsuario(null);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarSessao(); 
   }, []);
 
   const logout = async () => {
     try {
-      await logoutUsuario();      
+      await logoutUsuario();
     } catch (error) {
       console.error('Erro no logout:', error);
     }
-    localStorage.removeItem('tipo'); 
-    setUsuario(null);               
+    localStorage.removeItem('tipo');
+    setUsuario(null);
+  };
+
+  const atualizarUsuario = (novosDados) => {
+    setUsuario((usuarioAnterior) => ({
+      ...usuarioAnterior,
+      ...novosDados
+    }));
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, setUsuario, carregando, logout }}>
+    <AuthContext.Provider value={{ usuario, setUsuario, atualizarUsuario, carregando, logout, carregarSessao }}>
       {children}
     </AuthContext.Provider>
   );

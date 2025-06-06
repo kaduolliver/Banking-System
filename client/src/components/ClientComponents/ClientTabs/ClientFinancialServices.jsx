@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { verificarConta, solicitarAberturaConta } from "../../services/cliente/contaService";
+import { verificarConta, solicitarAberturaConta } from "../../../services/cliente/contaService";
 
 export default function FinancialServices() {
     const [temConta, setTemConta] = useState(null);

@@ -9,7 +9,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
     <Tabs.Root
       value={activeTab}
       onValueChange={setActiveTab}
-      className="flex w-full max-w-5xl h-[500px] bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
+      className="flex w-full max-w-5xl h-[700px] bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
       orientation="vertical"
     >
       <Tabs.List className="flex flex-col w-52 bg-zinc-800 p-4 space-y-2">
