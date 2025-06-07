@@ -30,8 +30,6 @@ export default function FinancialServices() {
         }
     }, [carregando, usuario]);
 
-
-
     const handleSolicitacao = async () => {
         try {
             await solicitarAberturaConta(usuario.id_usuario, tipoConta);

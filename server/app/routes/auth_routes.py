@@ -4,12 +4,12 @@ from app.controllers.auth_controller import registrar_usuario, login_usuario, va
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/api/register', methods=['POST'])
-def register():
+def register_route():
     resposta, status = registrar_usuario(request.json)
     return jsonify(resposta), status
 
 @auth_bp.route('/api/login', methods=['POST'])
-def login():
+def login_route():
     resposta, status = login_usuario(request.json)
     return jsonify(resposta), status
 
@@ -24,6 +24,6 @@ def verificar_sessao_route():
     return jsonify(resposta), status
 
 @auth_bp.route('/api/logout', methods=['POST'])
-def logout():
+def logout_route():
     session.clear()
     return jsonify({'mensagem': 'Logout realizado com sucesso.'}), 200
