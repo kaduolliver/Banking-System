@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { InputMask } from '@react-input/mask';
-import { enviarEndereco, buscarEndereco } from '../../../services/cliente/clientService';
-import StateSelect from '../../Common/StateSelect';
+import { enviarEndereco, buscarEndereco } from '../../../../services/cliente/clientService';
+import StateSelect from '../../../Common/StateSelect';
 
 export default function ClientAddressForm({ onEnderecoSalvo }) {
     const [endereco, setEndereco] = useState({

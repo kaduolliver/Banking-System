@@ -11,7 +11,7 @@ from app.models.funcionario import Funcionario
 from app.models.relatorio import Relatorio
 from app.models.transacao import Transacao
 from app.models.usuario import Usuario
-
+from app.models.solicitacao import SolicitacaoConta
 
 
 

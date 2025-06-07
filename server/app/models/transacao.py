@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, Numeric, Text, TIMESTAMP, CheckConstraint
 from sqlalchemy.orm import relationship
 from app.database.db import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Transacao(Base):
     __tablename__ = 'transacao'
@@ -11,7 +11,7 @@ class Transacao(Base):
     id_conta_destino = Column(Integer, ForeignKey('conta.id_conta'))
     tipo_transacao = Column(String(50), nullable=False)
     valor = Column(Numeric(15, 2), nullable=False)
-    data_hora = Column(TIMESTAMP, nullable=False, default=datetime.utcnow)
+    data_hora = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc))
     descricao = Column(Text)
 
     conta_origem = relationship("Conta", foreign_keys=[id_conta_origem], back_populates="transacoes_origem")

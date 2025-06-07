@@ -99,6 +99,23 @@ CREATE TABLE transacao (
 	FOREIGN KEY (id_conta_destino) REFERENCES conta(id_conta)
 );
 
+CREATE TABLE emprestimo (
+	id_emprestimo SERIAL PRIMARY KEY,
+	id_cliente INT NOT NULL,
+	id_conta INT NOT NULL,
+	valor_solicitado NUMERIC(15, 2) NOT NULL,
+	taxa_juros_mensal NUMERIC(5, 2) NOT NULL,
+    finalidade VARCHAR(100),
+	prazo_meses INT NOT NULL CHECK (prazo_meses BETWEEN 6 AND 60),
+	valor_total NUMERIC(15, 2) NOT NULL,
+	data_solicitacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	data_aprovacao TIMESTAMP,
+	status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO', 'PAGO')),
+	score_risco NUMERIC(5, 2),
+	FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+	FOREIGN KEY (id_conta) REFERENCES conta(id_conta)
+);
+
 CREATE TABLE auditoria (
 	id_auditoria SERIAL PRIMARY KEY,
 	id_usuario INT,
@@ -117,44 +134,87 @@ CREATE TABLE relatorio (
 	FOREIGN KEY (id_funcionario) REFERENCES funcionario(id_funcionario)
 );
 
-CREATE TABLE emprestimo (
-	id_emprestimo SERIAL PRIMARY KEY,
-	id_cliente INT NOT NULL,
-	id_conta INT NOT NULL,
-	valor_solicitado NUMERIC(15, 2) NOT NULL,
-	taxa_juros_mensal NUMERIC(5, 2) NOT NULL,
-	prazo_meses INT NOT NULL CHECK (prazo_meses BETWEEN 6 AND 60),
-	valor_total NUMERIC(15, 2) NOT NULL,
-	data_solicitacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	data_aprovacao TIMESTAMP,
-	status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO', 'PAGO')),
-	score_risco NUMERIC(5, 2),
-	FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
-	FOREIGN KEY (id_conta) REFERENCES conta(id_conta)
+CREATE TABLE solicitacao_conta (
+  id_solicitacao SERIAL PRIMARY KEY,
+  id_cliente INT NOT NULL,
+  tipo_conta VARCHAR(50) NOT NULL CHECK (tipo_conta IN ('corrente', 'poupanca', 'investimento')),
+  data_solicitacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO')),
+  id_funcionario_aprovador INT,
+  data_aprovacao TIMESTAMP,
+  observacoes TEXT,
+  
+  FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+  FOREIGN KEY (id_funcionario_aprovador) REFERENCES funcionario(id_funcionario)
 );
 
-CREATE INDEX idx_emprestimo_cliente_data ON emprestimo (id_cliente, data_solicitacao);
-
-CREATE OR REPLACE FUNCTION fn_depositar_emprestimo()
-RETURNS TRIGGER AS $$
+-- Função auditoria
+CREATE OR REPLACE FUNCTION fn_registrar_auditoria(p_id_usuario INT, p_acao VARCHAR, p_detalhes TEXT)
+RETURNS VOID AS $$
 BEGIN
-	IF NEW.status = 'APROVADO' AND OLD.status IS DISTINCT FROM 'APROVADO' THEN
-		INSERT INTO transacao (
-			id_conta_origem, tipo_transacao, valor, data_hora, descricao
-		) VALUES (
-			NEW.id_conta, 'deposito', NEW.valor_solicitado, CURRENT_TIMESTAMP,
-			CONCAT('EmprÃ©stimo ID ', NEW.id_emprestimo)
-		);
-	END IF;
-	RETURN NEW;
+  INSERT INTO auditoria (id_usuario, acao, detalhes)
+  VALUES (p_id_usuario, p_acao, p_detalhes);
 END;
 $$ LANGUAGE plpgsql;
 
+-- Função empréstimo
+CREATE OR REPLACE FUNCTION fn_depositar_emprestimo()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'APROVADO' AND OLD.status IS DISTINCT FROM 'APROVADO' THEN
+    INSERT INTO transacao (
+      id_conta_origem, tipo_transacao, valor, data_hora, descricao
+    ) VALUES (
+      NEW.id_conta, 'deposito', NEW.valor_solicitado, CURRENT_TIMESTAMP,
+      CONCAT('Empréstimo ID ', NEW.id_emprestimo)
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função criar conta após aprovação
+CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_numero_conta VARCHAR(20);
+BEGIN
+  IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+    v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+    INSERT INTO conta (numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status)
+    VALUES (v_numero_conta, 1, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa');
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para empréstimo
 CREATE TRIGGER depositar_emprestimo
 AFTER UPDATE ON emprestimo
 FOR EACH ROW
 EXECUTE FUNCTION fn_depositar_emprestimo();
 
+-- Trigger para criar conta
+CREATE TRIGGER trg_criar_conta_apos_aprovacao
+AFTER UPDATE ON solicitacao_conta
+FOR EACH ROW
+EXECUTE FUNCTION fn_criar_conta_apos_aprovacao();
+
+-- View empréstimos ativos
+CREATE OR REPLACE VIEW vw_emprestimos_ativos AS
+SELECT
+	e.id_emprestimo,
+	u.nome,
+	e.valor_solicitado,
+	e.taxa_juros_mensal,
+	e.prazo_meses,
+	e.valor_total
+FROM emprestimo e
+JOIN cliente c ON e.id_cliente = c.id_cliente
+JOIN usuario u ON c.id_usuario = u.id_usuario
+WHERE e.status = 'APROVADO';
+
+-- Procedure processar_emprestimo
 CREATE OR REPLACE PROCEDURE processar_emprestimo(
 	IN p_id_cliente INT,
 	IN p_id_conta INT,
@@ -171,7 +231,6 @@ DECLARE
 	v_valor_total NUMERIC(15, 2);
 	v_id_emprestimo INT;
 BEGIN
-
 	INSERT INTO emprestimo (
 		id_cliente, id_conta, valor_solicitado, prazo_meses, score_risco, status, finalidade
 	) VALUES (
@@ -180,7 +239,6 @@ BEGIN
 	RETURNING id_emprestimo INTO v_id_emprestimo;
 
 	IF p_aprovado THEN
-
 		v_taxa := CASE
 			WHEN p_score_risco <= 20 THEN 0.5
 			WHEN p_score_risco <= 40 THEN 1.0
@@ -188,9 +246,7 @@ BEGIN
 			WHEN p_score_risco <= 80 THEN 3.5
 			ELSE 5.0
 		END;
-
 		v_valor_total := p_valor * POWER(1 + v_taxa / 100, p_prazo);
-
 		UPDATE emprestimo
 		SET status = 'APROVADO',
 			taxa_juros_mensal = v_taxa,
@@ -198,7 +254,6 @@ BEGIN
 			data_aprovacao = CURRENT_TIMESTAMP
 		WHERE id_emprestimo = v_id_emprestimo;
 	ELSE
-
 		UPDATE emprestimo
 		SET status = 'REJEITADO'
 		WHERE id_emprestimo = v_id_emprestimo;
@@ -206,26 +261,9 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE VIEW vw_emprestimos_ativos AS
-SELECT
-	e.id_emprestimo,
-	u.nome,
-	e.valor_solicitado,
-	e.taxa_juros_mensal,
-	e.prazo_meses,
-	e.valor_total
-FROM
-	emprestimo e
-JOIN cliente c ON e.id_cliente = c.id_cliente
-JOIN usuario u ON c.id_usuario = u.id_usuario
-WHERE
-	e.status = 'APROVADO';
-
-CREATE INDEX idx_emprestimo_aprovado ON emprestimo (id_cliente, data_solicitacao)
-WHERE status = 'APROVADO';
+CREATE INDEX idx_emprestimo_cliente_data ON emprestimo (id_cliente, data_solicitacao);
+CREATE INDEX idx_transacao_conta_data ON transacao(id_conta_origem, data_hora DESC);
+CREATE INDEX idx_emprestimo_aprovado ON emprestimo (id_cliente, data_solicitacao) WHERE status = 'APROVADO';
 
 CREATE UNIQUE INDEX idx_usuario_cpf ON usuario(cpf);
-
 CREATE UNIQUE INDEX idx_conta_numero ON conta(numero_conta);
-
-CREATE INDEX idx_transacao_conta_data ON transacao(id_conta_origem, data_hora DESC);

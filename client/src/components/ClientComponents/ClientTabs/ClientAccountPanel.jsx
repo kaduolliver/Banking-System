@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import ClientAddressForm from './ClientAddress';
+import ClientAddressForm from './AccountPanelComponents/ClientAddress';
+import FinancialServices from './AccountPanelComponents/ClientAccountRequest';
+import ScreenOverlay from '../../EffectsComponents/ScreenOverlay';
 
 export default function ClientAccountPanel() {
   const [enderecoSalvo, setEnderecoSalvo] = useState(false);
@@ -9,10 +11,16 @@ export default function ClientAccountPanel() {
       {!enderecoSalvo && (
         <ClientAddressForm onEnderecoSalvo={() => setEnderecoSalvo(true)} />
       )}
+
       {enderecoSalvo && (
-        <div className="text-green-400 p-4">
-          Endereço cadastrado com sucesso!
-        </div>
+        <>
+          <ScreenOverlay />
+          {/* <div className="text-green-400 p-4">
+            Endereço cadastrado com sucesso!
+          </div> */}
+
+          <FinancialServices />
+        </>
       )}
     </div>
   );

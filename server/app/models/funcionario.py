@@ -14,3 +14,4 @@ class Funcionario(Base):
     usuario = relationship("Usuario", back_populates="funcionario", uselist=False)
     supervisor = relationship("Funcionario", remote_side=[id_funcionario], backref="subordinados")
     relatorios = relationship("Relatorio", back_populates="funcionario")
+    solicitacoes_aprovadas = relationship("SolicitacaoConta", back_populates="funcionario_aprovador")

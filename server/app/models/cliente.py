@@ -12,4 +12,5 @@ class Cliente(Base):
     usuario = relationship("Usuario", back_populates="cliente", uselist=False)
     contas = relationship("Conta", back_populates="cliente")
     emprestimos = relationship("Emprestimo", back_populates="cliente")
+    solicitacoes_conta = relationship("SolicitacaoConta", back_populates="cliente")
 
