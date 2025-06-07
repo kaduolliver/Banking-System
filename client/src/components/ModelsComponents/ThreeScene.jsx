@@ -1,8 +1,7 @@
-// components/ThreeScene.jsx
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useInView } from "react-intersection-observer";
-import SpinningModel from "./SpinningModel"; // Novo componente
+import SpinningModel from "./SpinningModel"; 
 
 export default function ThreeScene() {
   const { ref, inView } = useInView({

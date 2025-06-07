@@ -9,6 +9,11 @@ export default function FinancialServices() {
     const [erro, setErro] = useState("");
     const [tipoConta, setTipoConta] = useState("corrente");
 
+    // useEffect(() => {
+    //     console.log("carregando:", carregando);
+    //     console.log("usuario:", usuario);
+    // }, [carregando, usuario]);
+
     useEffect(() => {
         const checarConta = async () => {
             try {
@@ -20,8 +25,12 @@ export default function FinancialServices() {
             }
         };
 
-        if (usuario?.id_usuario) checarConta();
-    }, [usuario]);
+        if (!carregando && usuario?.id_usuario) {
+            checarConta();
+        }
+    }, [carregando, usuario]);
+
+
 
     const handleSolicitacao = async () => {
         try {
@@ -34,9 +43,10 @@ export default function FinancialServices() {
         }
     };
 
-    if (carregando) {
+    if (carregando || !usuario?.id_usuario) {
         return <p className="text-center text-gray-600">Carregando sessão...</p>;
     }
+
 
     return (
         <div className="max-w-xl mx-auto mt-10 p-6 bg-black shadow-lg rounded-2xl">

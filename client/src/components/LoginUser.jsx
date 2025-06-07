@@ -29,10 +29,9 @@ export default function LoginAndRegister() {
     }
   };
 
-
   const exibirSplashERedirecionar = (resposta) => {
     setUsuario({
-      id: resposta.id_usuario,
+      id_usuario: resposta.id_usuario,
       tipo_usuario: resposta.tipo,
       nome: resposta.nome || '',
       cpf: resposta.cpf,

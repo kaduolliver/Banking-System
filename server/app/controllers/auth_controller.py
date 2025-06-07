@@ -9,7 +9,6 @@ import random
 import string
 from sqlalchemy.exc import IntegrityError
 
-
 def gerar_otp():
     return ''.join(random.choices(string.digits, k=6))
 

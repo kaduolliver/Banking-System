@@ -1,4 +1,3 @@
-// components/SpinningModel.jsx
 import { useRef } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three-stdlib";
@@ -9,7 +8,7 @@ export default function SpinningModel({ inView, position = [0, 0, 0] }) {
 
   // Configure DRACO Loader
   const dracoLoader = new DRACOLoader();
-  dracoLoader.setDecoderPath("/draco/"); // coloque os arquivos decoder aqui
+  dracoLoader.setDecoderPath("/draco/"); 
 
   const gltf = useLoader(GLTFLoader, "/models/Infinity-CreditCard-3D-DRACO.glb", (loader) => {
     loader.setDRACOLoader(dracoLoader);
