@@ -1,6 +1,6 @@
-import { useAuth } from '../context/authContext';
+import { useAuth } from '../../context/authContext';
 import { Navigate } from 'react-router-dom';
-import SplashScreen from './EffectsComponents/SplashScreen';
+import SplashScreen from '../EffectsComponents/SplashScreen';
 
 export default function ProtectedRoute({ children, tipoPermitido = null }) {
   const { usuario, carregando } = useAuth();

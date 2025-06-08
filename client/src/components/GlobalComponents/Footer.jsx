@@ -1,4 +1,4 @@
-import LogoBar from "./EffectsComponents/LogoBar";
+import LogoBar from "../EffectsComponents/LogoBar";
 import {
     FaYoutube,
     FaInstagram,
@@ -8,7 +8,6 @@ import {
     FaTiktok,
     FaReddit,
 } from "react-icons/fa6";
-import { Link } from 'react-router-dom';
 
 const FooterLink = ({ href, children }) => (
     <a href={href} className="hover:text-amber-400 transition">

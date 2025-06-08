@@ -5,10 +5,10 @@ import FormContainer from './LoginFormComponents/FormContainer';
 import InputField from './LoginFormComponents/InputField';
 import PasswordField from './LoginFormComponents/PasswordField';
 import { User } from 'lucide-react';
-import { LoginUsuario, VerificaOTP } from '../services/auth/loginService';
-import { useAuth } from '../context/authContext';
+import { LoginUsuario, VerificaOTP } from '../../services/auth/loginService';
+import { useAuth } from '../../context/authContext';
 import { useNavigate } from 'react-router-dom';
-import SplashScreen from './EffectsComponents/SplashScreen';
+import SplashScreen from '../EffectsComponents/SplashScreen';
 
 export default function LoginAndRegister() {
   const [modo, setModo] = useState('login');
@@ -37,6 +37,7 @@ export default function LoginAndRegister() {
       cpf: resposta.cpf,
       telefone: resposta.telefone,
       data_nascimento: resposta.data_nascimento,
+      cargo: resposta.cargo || '',
     });
 
     localStorage.setItem('usuarioId', resposta.id_usuario);

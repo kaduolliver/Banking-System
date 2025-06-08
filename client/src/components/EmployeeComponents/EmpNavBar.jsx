@@ -34,7 +34,7 @@ const EmployeeNavbar = () => {
           <nav className="space-x-8 hidden md:flex gap-20" style={{ fontFamily: 'Aileron, sans-serif' }}>
             <a className="text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
               <Handshake />
-              Olá, Fun. {usuario?.nome ? usuario.nome.split(' ').slice(0, 2).join(' ') : 'usuário'}
+              Olá, {usuario?.cargo ?? 'Funcionário'} {usuario?.nome ? usuario.nome.split(' ').slice(0, 2).join(' ') : 'usuário'}
             </a>
 
             <Link to="/market" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400">
@@ -82,7 +82,6 @@ const EmployeeNavbar = () => {
         </div>
       </header>
 
-      {/* Painel de notificações reutilizável */}
       <NotificationPanel
         show={showNotifications}
         onClose={() => setShowNotifications(false)}

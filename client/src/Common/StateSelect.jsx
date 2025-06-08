@@ -1,4 +1,4 @@
-export default function StateSelect({ value, onChange, name = 'estado', className = '' }) {
+export default function StateSelect({ value, onChange, name = 'estado', className = '', disabled = false }) {
   return (
     <div>
       
@@ -6,6 +6,7 @@ export default function StateSelect({ value, onChange, name = 'estado', classNam
         name={name}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         className={`w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white ${className}`}
       >
         <option value="">Selecione um estado</option>

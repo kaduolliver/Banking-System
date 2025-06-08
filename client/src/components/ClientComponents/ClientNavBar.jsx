@@ -103,7 +103,6 @@ const ClientNavbar = () => {
         </div>
       </header>
 
-      {/* OFFCANVAS DE NOTIFICAÇÕES */}
       <NotificationPanel
         show={showNotifications}
         onClose={() => setShowNotifications(false)}

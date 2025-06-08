@@ -4,6 +4,7 @@ from app.models.cliente import Cliente
 from app.models.funcionario import Funcionario
 from app.utils.security import hash_senha, gerar_otp, verificar_senha
 from app.utils.validators import validar_data, validar_campos_obrigatorios, validar_cpf
+from app.utils.employee_functions import gerar_codigo_estagiario
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from flask import session
@@ -48,11 +49,15 @@ def registrar_usuario(data):
         if tipo == 'cliente':
             db.add(Cliente(id_usuario=novo_usuario.id_usuario, score_credito=0))
         else:
+            codigo_gerado = gerar_codigo_estagiario(db)
             db.add(Funcionario(
                 id_usuario=novo_usuario.id_usuario,
-                codigo_funcionario=f"FUNC{novo_usuario.id_usuario}",
-                cargo="Funcionário"
+                codigo_funcionario=codigo_gerado,
+                cargo="Estagiário",
+                nivel_hierarquico=1,
+                id_supervisor=None  
             ))
+
 
         db.commit()
         return {"mensagem": "Usuário registrado com sucesso!"}, 200
@@ -90,6 +95,10 @@ def login_usuario(data):
 
         print(f"OTP para {usuario.cpf}: {otp}")
 
+        cargo = None
+        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
+            cargo = usuario.funcionario.cargo
+
         return {
             'mensagem': 'OTP enviado para validação.',
             'precisa_otp': True,
@@ -98,8 +107,10 @@ def login_usuario(data):
             'nome': usuario.nome,
             'cpf': usuario.cpf,
             'data_nascimento': usuario.data_nascimento.isoformat(),
-            'telefone': usuario.telefone
+            'telefone': usuario.telefone,
+            'cargo': cargo
         }, 200
+    
     except Exception as e:
         db.rollback()
         return {'erro': str(e)}, 500
@@ -130,6 +141,10 @@ def validar_otp(data):
 
         db.commit()
 
+        cargo = None
+        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
+            cargo = usuario.funcionario.cargo
+
         return {
             'mensagem': 'Login completo!',
             'id_usuario': usuario.id_usuario,
@@ -137,7 +152,8 @@ def validar_otp(data):
             'telefone': usuario.telefone,
             'tipo': usuario.tipo_usuario,
             'data_nascimento': usuario.data_nascimento.isoformat(),
-            'nome': usuario.nome
+            'nome': usuario.nome,
+            'cargo': cargo
         }, 200
     except Exception as e:
         db.rollback()
@@ -156,6 +172,10 @@ def verificar_sessao():
         if not usuario:
             return {'erro': 'Usuário não encontrado'}, 404
 
+        cargo = None
+        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
+            cargo = usuario.funcionario.cargo
+
         return {
             'autenticado': True,
             'usuario': {
@@ -164,7 +184,8 @@ def verificar_sessao():
                 'cpf': usuario.cpf,
                 'telefone': usuario.telefone,
                 'data_nascimento': usuario.data_nascimento.isoformat(),
-                'tipo_usuario': usuario.tipo_usuario
+                'tipo_usuario': usuario.tipo_usuario,
+                'cargo': cargo
             }
         }, 200
     finally:

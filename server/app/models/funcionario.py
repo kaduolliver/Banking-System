@@ -10,6 +10,7 @@ class Funcionario(Base):
     codigo_funcionario = Column(String(50), unique=True, nullable=False)
     cargo = Column(String(100), nullable=False)
     id_supervisor = Column(Integer, ForeignKey('funcionario.id_funcionario'))
+    nivel_hierarquico = Column(Integer)
 
     usuario = relationship("Usuario", back_populates="funcionario", uselist=False)
     supervisor = relationship("Funcionario", remote_side=[id_funcionario], backref="subordinados")

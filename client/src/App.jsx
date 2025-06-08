@@ -10,13 +10,13 @@ import User from './pages/User';
 import CreditCard from './pages/CreditCard';
 import Client from './components/ClientComponents/Client';
 import Employee from './components/EmployeeComponents/Employee';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/GlobalComponents/ProtectedRoute';
 import ScrollToTop from './components/EffectsComponents/ScrollToTop';
 import SplashScreen from './components/EffectsComponents/SplashScreen';
-import Footer from './components/Footer';
+import Footer from './components/GlobalComponents/Footer';
 import { useAuth } from './context/authContext';
 import NavbarSwitcher from './components/EffectsComponents/NavBarSwitcher';
-import PublicRoute from './components/PublicRoute';
+import PublicRoute from './components/GlobalComponents/PublicRoute';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);

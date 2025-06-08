@@ -20,7 +20,6 @@ export default function User() {
     }
   }, [usuario, carregando, navigate]);
 
-  // Enquanto estiver carregando, você pode exibir um loading, ou apenas o fundo preto
   if (carregando) {
     return (
       <div className="min-h-screen w-full bg-black flex items-center justify-center">
@@ -30,6 +29,5 @@ export default function User() {
     );
   }
 
-  // Enquanto decide o redirecionamento, mantém o fundo para evitar o salto de layout
   return <div className="min-h-screen w-full bg-black" />;
 }

@@ -2,7 +2,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function UserTabs({ tabs, activeTab, setActiveTab }) {
-  // Encontra o tab ativo para renderizar somente ele no AnimatePresence
+  
   const active = tabs.find(tab => tab.value === activeTab);
 
   return (

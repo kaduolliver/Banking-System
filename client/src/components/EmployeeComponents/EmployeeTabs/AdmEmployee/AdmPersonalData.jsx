@@ -1,10 +1,20 @@
-import { formatCPF, formatData, formatTelefone, capitalize } from '../../../utils/formatters';
+import { formatCPF, formatData, formatTelefone, capitalize } from '../../../../utils/formatters';
 import { Edit2 } from 'lucide-react';
 import { InputMask } from '@react-input/mask';
-import StateSelect from '../../../Common/StateSelect';
-import { useClientData } from './hooks/PersonalData/useClientData';
+import StateSelect from '../../../../Common/StateSelect';
+import { useAdmData } from '../hooks/useAdmData';
 
-export default function ClientPersonalData() {
+function getPlaceholder(campo) {
+    const placeholders = {
+        logradouro: 'Rua, Avenida...',
+        numero_casa: 'Número',
+        bairro: 'Bairro',
+        complemento: 'Apartamento, Casa, etc.',
+    };
+    return placeholders[campo] || '';
+}
+
+export default function AdmPersonalData() {
     const {
         usuario,
         carregando,
@@ -23,7 +33,7 @@ export default function ClientPersonalData() {
         setNovoEndereco,
         salvarEndereco,
         setErro,
-    } = useClientData();
+    } = useAdmData();
 
     if (carregando) return <div className="text-zinc-400">Carregando...</div>;
     if (!usuario) return <div className="text-red-400">Usuário não autenticado.</div>;
@@ -88,55 +98,71 @@ export default function ClientPersonalData() {
                     </div>
                     <InfoItem label="Tipo de Usuário" value={capitalize(usuario.tipo_usuario)} />
                     <InfoItem label="Data de Nascimento" value={formatData(usuario.data_nascimento)} />
+                    <InfoItem label="Cargo" value={usuario.cargo} />
                 </div>
 
                 <div className="mt-8 space-y-4">
                     <h3 className="text-xl font-semibold text-white border-b border-zinc-700 pb-1 flex justify-between">
                         Endereço
-                        {!editandoEndereco && endereco && (
-                            <button onClick={() => {
-                                setNovoEndereco(endereco);
-                                setEditandoEndereco(true);
-                                setErro(null);
-                            }} title="Editar Endereço">
+                        {!editandoEndereco && (
+                            <button
+                                onClick={() => {
+                                    setNovoEndereco(endereco || {
+                                        cep: '',
+                                        estado: '',
+                                        logradouro: '',
+                                        numero_casa: '',
+                                        bairro: '',
+                                        complemento: '',
+                                    });
+                                    setEditandoEndereco(true);
+                                    setErro(null);
+                                }}
+                                title={endereco ? "Editar Endereço" : "Adicionar Endereço"}
+                            >
                                 <Edit2 className="text-amber-600 hover:text-amber-200" size={20} />
                             </button>
                         )}
+
                     </h3>
 
                     {carregandoEndereco ? (
                         <div className="text-zinc-400">Carregando endereço...</div>
-                    ) : endereco ? (
-                        editandoEndereco ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {['cep', 'estado', 'logradouro', 'numero_casa', 'bairro', 'complemento'].map(campo => (
-                                    <div key={campo}>
-                                        <label className="text-sm text-zinc-400">{campo.replace('_', ' ').toUpperCase()}</label>
-                                        {campo === 'cep' ? (
-                                            <InputMask
-                                                mask="_____-___"
-                                                replacement={{ _: /\d/ }}
-                                                value={novoEndereco[campo] || ''}
-                                                onChange={e => setNovoEndereco({ ...novoEndereco, [campo]: e.target.value })}
-                                                className="w-full p-2 rounded bg-zinc-800 text-white border border-amber-600 outline-none"
-                                                placeholder="00000-000"
-                                            />
-                                        ) : campo === 'estado' ? (
-                                            <StateSelect
-                                                value={novoEndereco.estado || ''}
-                                                onChange={e => setNovoEndereco({ ...novoEndereco, estado: e.target.value })}
-                                                className="border-amber-600"
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                className="w-full p-2 rounded bg-zinc-800 text-white border border-amber-600 outline-none"
-                                                value={novoEndereco[campo] || ''}
-                                                onChange={e => setNovoEndereco({ ...novoEndereco, [campo]: e.target.value })}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {['cep', 'estado', 'logradouro', 'numero_casa', 'bairro', 'complemento'].map(campo => (
+                                <div key={campo}>
+                                    <label className="text-sm text-zinc-400">{campo.replace('_', ' ').toUpperCase()}</label>
+                                    {campo === 'cep' ? (
+                                        <InputMask
+                                            mask="_____-___"
+                                            replacement={{ _: /\d/ }}
+                                            value={novoEndereco[campo] || ''}
+                                            onChange={e => setNovoEndereco({ ...novoEndereco, [campo]: e.target.value })}
+                                            className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                            placeholder="00000-000"
+                                            disabled={!editandoEndereco}
+                                        />
+                                    ) : campo === 'estado' ? (
+                                        <StateSelect
+                                            value={novoEndereco.estado || ''}
+                                            onChange={e => setNovoEndereco({ ...novoEndereco, estado: e.target.value })}
+                                            className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                            disabled={!editandoEndereco}
+                                        />
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                            value={novoEndereco[campo] || ''}
+                                            onChange={e => setNovoEndereco({ ...novoEndereco, [campo]: e.target.value })}
+                                            disabled={!editandoEndereco}
+                                            placeholder={getPlaceholder(campo)}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                            {editandoEndereco && (
                                 <div className="col-span-full flex space-x-2 mt-2">
                                     <button
                                         onClick={salvarEndereco}
@@ -147,7 +173,14 @@ export default function ClientPersonalData() {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            setNovoEndereco(endereco);
+                                            setNovoEndereco(endereco || {
+                                                cep: '',
+                                                estado: '',
+                                                logradouro: '',
+                                                numero_casa: '',
+                                                bairro: '',
+                                                complemento: '',
+                                            });
                                             setEditandoEndereco(false);
                                             setErro(null);
                                         }}
@@ -155,23 +188,14 @@ export default function ClientPersonalData() {
                                     >
                                         Cancelar
                                     </button>
+
                                 </div>
-                                {erro && <div className="text-red-500 mt-1 col-span-full">{erro}</div>}
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <InfoItem label="CEP" value={endereco.cep} />
-                                <InfoItem label="Estado" value={endereco.estado} />
-                                <InfoItem label="Logradouro" value={endereco.logradouro} />
-                                <InfoItem label="Número" value={endereco.numero_casa} />
-                                <InfoItem label="Bairro" value={endereco.bairro} />
-                                {endereco.complemento && <InfoItem label="Complemento" value={endereco.complemento} />}
-                            </div>
-                        )
-                    ) : (
-                        <div className="text-zinc-400">Endereço não cadastrado.</div>
+                            )}
+                            {erro && <div className="text-red-500 mt-1 col-span-full">{erro}</div>}
+                        </div>
                     )}
                 </div>
+
             </div>
         </div>
     );

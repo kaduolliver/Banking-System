@@ -37,9 +37,6 @@ VALUES (102, 'GER001', 'Gerente', 2, (SELECT id_funcionario FROM funcionario WHE
 INSERT INTO funcionario (id_usuario, codigo_funcionario, cargo, nivel_hierarquico, id_supervisor)
 VALUES (103, 'EST001', 'Estagiário', 1, (SELECT id_funcionario FROM funcionario WHERE codigo_funcionario = 'GER001'));
 
-
-
-
 -- Abordagem 2: Usando a coluna tipo_usuario na tabela usuario para papéis de sistema e a tabela funcionario para papéis específicos da empresa.
 -- Você já tem tipo_usuario VARCHAR(50) NOT NULL CHECK (tipo_usuario IN ('cliente', 'funcionario')) na tabela usuario. Esta é uma distinção importante para o nível mais alto de acesso à aplicação (se é um usuário geral ou um funcionário).
 

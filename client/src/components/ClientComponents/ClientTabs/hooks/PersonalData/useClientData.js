@@ -1,8 +1,8 @@
-import { useAuth } from '../../../../context/authContext';
+import { useAuth } from '../../../../../context/authContext';
 import { useState, useEffect } from 'react';
-import { validarTelefone, formatCEP } from '../utils/formatters';
-import { atualizarTelefone } from '../../../../services/auth/userService';
-import { buscarEndereco, enviarEndereco } from '../../../../services/cliente/clientService';
+import { validarTelefone, formatCEP } from '../../../../../utils/formatters';
+import { atualizarTelefone } from '../../../../../services/auth/userService';
+import { buscarEndereco, enviarEndereco } from '../../../../../services/cliente/clientService';
 
 export function useClientData() {
     const { usuario, carregando, atualizarUsuario } = useAuth();

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
-import Navbar from '../Navbar';
+import Navbar from '../GlobalComponents/Navbar';
 import ClientNavbar from '../ClientComponents/ClientNavBar';
 import EmpNavBar from '../EmployeeComponents/EmpNavBar';
 
