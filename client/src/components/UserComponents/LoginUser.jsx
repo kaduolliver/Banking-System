@@ -38,6 +38,7 @@ export default function LoginAndRegister() {
       telefone: resposta.telefone,
       data_nascimento: resposta.data_nascimento,
       cargo: resposta.cargo || '',
+      id_funcionario: resposta.id_funcionario,
     });
 
     localStorage.setItem('usuarioId', resposta.id_usuario);

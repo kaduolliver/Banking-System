@@ -96,8 +96,10 @@ def login_usuario(data):
         print(f"OTP para {usuario.cpf}: {otp}")
 
         cargo = None
+        funcionario = None
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
             cargo = usuario.funcionario.cargo
+            funcionario = usuario.funcionario.id_funcionario
 
         return {
             'mensagem': 'OTP enviado para validação.',
@@ -108,7 +110,8 @@ def login_usuario(data):
             'cpf': usuario.cpf,
             'data_nascimento': usuario.data_nascimento.isoformat(),
             'telefone': usuario.telefone,
-            'cargo': cargo
+            'cargo': cargo,
+            'id_funcionario': funcionario
         }, 200
     
     except Exception as e:
@@ -139,11 +142,17 @@ def validar_otp(data):
         session['id_usuario'] = usuario.id_usuario
         session['tipo'] = usuario.tipo_usuario
 
+        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
+            session['id_funcionario'] = usuario.funcionario.id_funcionario
+            session['cargo'] = usuario.funcionario.cargo
+
         db.commit()
 
         cargo = None
+        funcionario = None
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
             cargo = usuario.funcionario.cargo
+            funcionario = usuario.funcionario.id_funcionario
 
         return {
             'mensagem': 'Login completo!',
@@ -153,7 +162,8 @@ def validar_otp(data):
             'tipo': usuario.tipo_usuario,
             'data_nascimento': usuario.data_nascimento.isoformat(),
             'nome': usuario.nome,
-            'cargo': cargo
+            'cargo': cargo,
+            'id_funcionario': funcionario
         }, 200
     except Exception as e:
         db.rollback()
@@ -173,8 +183,10 @@ def verificar_sessao():
             return {'erro': 'Usuário não encontrado'}, 404
 
         cargo = None
+        funcionario = None
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
             cargo = usuario.funcionario.cargo
+            funcionario = usuario.funcionario.id_funcionario
 
         return {
             'autenticado': True,
@@ -185,7 +197,8 @@ def verificar_sessao():
                 'telefone': usuario.telefone,
                 'data_nascimento': usuario.data_nascimento.isoformat(),
                 'tipo_usuario': usuario.tipo_usuario,
-                'cargo': cargo
+                'cargo': cargo,
+                'id_funcionario': funcionario
             }
         }, 200
     finally:

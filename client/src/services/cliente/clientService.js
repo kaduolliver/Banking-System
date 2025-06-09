@@ -1,6 +1,6 @@
 export async function enviarEndereco(dadosEndereco) {
     try {
-        const response = await fetch('http://localhost:5000/api/cliente/endereco', {
+        const response = await fetch('http://localhost:5000/api/usuario/endereco', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -25,7 +25,7 @@ export async function enviarEndereco(dadosEndereco) {
 
 export async function buscarEndereco() {
   try {
-    const response = await fetch('http://localhost:5000/api/cliente/endereco', {
+    const response = await fetch('http://localhost:5000/api/usuario/endereco', {
       method: 'GET',
       credentials: 'include',
     });

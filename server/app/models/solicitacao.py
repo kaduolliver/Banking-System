@@ -14,6 +14,7 @@ class SolicitacaoConta(Base):
     id_funcionario_aprovador = Column(Integer, ForeignKey('funcionario.id_funcionario'), nullable=True)
     observacoes = Column(String(500))
     valor_inicial = Column(Numeric(15, 2), default=0.00)
+    data_aprovacao = Column(DateTime, default=None)
 
     cliente = relationship("Cliente", back_populates="solicitacoes_conta")
     funcionario_aprovador = relationship("Funcionario", back_populates="solicitacoes_aprovadas")

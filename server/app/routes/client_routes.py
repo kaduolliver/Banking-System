@@ -1,23 +1,17 @@
 from flask import Blueprint, request, jsonify
-from app.controllers.client_controller import add_endereco, get_endereco
+from app.controllers.client_controllers.client import solicitar_abertura_conta, verificar_possui_conta
 
-client_bp = Blueprint('cliente', __name__)
+client_bp = Blueprint('client', __name__)
 
-@client_bp.route('/api/cliente/endereco', methods=['POST', 'PUT'])
-def endereco_route():
-    resposta, status = add_endereco(request.json)
+@client_bp.route('/api/solicitacoes', methods=['POST'])
+def route_solicitar_abertura():
+    resposta, status = solicitar_abertura_conta(request.json)
     return jsonify(resposta), status
 
-@client_bp.route('/api/cliente/endereco', methods=['GET'])
-def endereco_get_route():
-    resposta, status = get_endereco()
+@client_bp.route('/api/cliente/<int:cliente_id>/conta', methods=['GET'])
+def route_verificar_conta(cliente_id):
+    resposta, status = verificar_possui_conta(cliente_id)
     return jsonify(resposta), status
-
-
-
-
-
-
 
 
 

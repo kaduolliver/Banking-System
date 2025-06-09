@@ -28,24 +28,62 @@ CREATE TABLE cliente (
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
 
+-- Tabela endereco (antiga)
+
+-- CREATE TABLE endereco (
+-- 	id_endereco SERIAL PRIMARY KEY,
+-- 	id_usuario INT NOT NULL,
+-- 	cep VARCHAR(10) NOT NULL,
+-- 	logradouro VARCHAR(255) NOT NULL,
+-- 	numero_casa VARCHAR(255) NOT NULL,
+-- 	bairro VARCHAR(100) NOT NULL,
+-- 	estado CHAR(2) NOT NULL,
+-- 	complemento VARCHAR(255),
+-- 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+-- );
+
+-- Tabela endereco (atual)
+
+-- 1. Admin cadastra a agencia 
+-- 2. Admin cadastra um endereco para agencia usando id_agencia. OBS: 
 CREATE TABLE endereco (
-	id_endereco SERIAL PRIMARY KEY,
-	id_usuario INT NOT NULL,
-	cep VARCHAR(10) NOT NULL,
-	logradouro VARCHAR(255) NOT NULL,
-	numero_casa VARCHAR(255) NOT NULL,
-	bairro VARCHAR(100) NOT NULL,
-	estado CHAR(2) NOT NULL,
-	complemento VARCHAR(255),
-	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+    id_endereco SERIAL PRIMARY KEY,
+    id_usuario INT UNIQUE, -- um endereço para cada usuario
+    id_agencia INT UNIQUE, -- um endereco para cada agencia
+    cep VARCHAR(10) NOT NULL,
+    logradouro VARCHAR(255) NOT NULL,
+    numero_casa VARCHAR(255) NOT NULL,
+    bairro VARCHAR(100) NOT NULL,
+    estado CHAR(2) NOT NULL,
+    complemento VARCHAR(255),
+
+    CONSTRAINT fk_endereco_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_endereco_agencia FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia),
+	
+	-- constraint para vincular o endereco a uma agencia OU usuario, mas nunca para ambos
+    CONSTRAINT endereco_usuario_ou_agencia_ck CHECK (
+        (id_usuario IS NOT NULL AND id_agencia IS NULL)
+        OR
+        (id_usuario IS NULL AND id_agencia IS NOT NULL)
+    )
 );
 
+-- Tabela agencia (antiga)
+
+-- CREATE TABLE agencia (
+-- 	id_agencia SERIAL PRIMARY KEY,
+-- 	nome VARCHAR(255) NOT NULL,
+-- 	codigo_agencia VARCHAR(50) UNIQUE NOT NULL,
+-- 	endereco_id INT UNIQUE NOT NULL,
+-- 	FOREIGN KEY (endereco_id) REFERENCES endereco(id_endereco)
+-- );
+
+-- Tabela agencia (atual)
+
 CREATE TABLE agencia (
-	id_agencia SERIAL PRIMARY KEY,
-	nome VARCHAR(255) NOT NULL,
-	codigo_agencia VARCHAR(50) UNIQUE NOT NULL,
-	endereco_id INT UNIQUE NOT NULL,
-	FOREIGN KEY (endereco_id) REFERENCES endereco(id_endereco)
+    id_agencia SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    codigo_agencia VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE conta (
@@ -173,20 +211,54 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Função criar conta após aprovação
+-- Função criar conta após aprovação (antigo)
+-- CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--   v_numero_conta VARCHAR(20);
+-- BEGIN
+--   IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+--     v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+--     INSERT INTO conta (numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status)
+--     VALUES (v_numero_conta, 1, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa');
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+-- Função criar conta após aprovação (novo/atual)
 CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
 RETURNS TRIGGER AS $$
 DECLARE
   v_numero_conta VARCHAR(20);
+  v_id_agencia INTEGER;
 BEGIN
   IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+    -- Gerar número da conta
     v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
-    INSERT INTO conta (numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status)
-    VALUES (v_numero_conta, 1, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa');
+
+    -- Buscar dinamicamente o ID da agência com código '001'
+    SELECT id_agencia INTO v_id_agencia
+    FROM agencia
+    WHERE codigo = '001'
+    LIMIT 1;
+
+    -- Verificar se a agência foi encontrada
+    IF v_id_agencia IS NULL THEN
+      RAISE EXCEPTION 'Agência com código 001 não encontrada. Verifique se ela foi cadastrada.';
+    END IF;
+
+    -- Inserir conta vinculada à agência encontrada
+    INSERT INTO conta (
+      numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
+    ) VALUES (
+      v_numero_conta, v_id_agencia, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
+    );
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Trigger para empréstimo
 CREATE TRIGGER depositar_emprestimo

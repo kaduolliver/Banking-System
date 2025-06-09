@@ -19,7 +19,7 @@ class Usuario(Base):
 
     cliente = relationship("Cliente", back_populates="usuario", uselist=False)
     funcionario = relationship("Funcionario", back_populates="usuario", uselist=False)
-    enderecos = relationship("Endereco", back_populates="usuario")
+    endereco = relationship("Endereco", back_populates="usuario", uselist=False)
     auditorias = relationship("Auditoria", back_populates="usuario")
 
 
