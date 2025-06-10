@@ -23,7 +23,7 @@ const EmployeeNavbar = () => {
     ? '/user/client'
     : usuario?.tipo_usuario === 'funcionario'
       ? '/user/employee'
-      : '/user';
+      : '/';
 
   return (
     <>

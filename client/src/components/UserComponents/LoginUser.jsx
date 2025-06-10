@@ -23,6 +23,7 @@ export default function LoginAndRegister() {
   const navigate = useNavigate();
 
   const handleSplashComplete = () => {
+    console.log('Splash completo! Redirecionando para', redirectPath);
     localStorage.removeItem('mostrandoSplash');
     if (redirectPath) {
       navigate(redirectPath);
@@ -32,22 +33,35 @@ export default function LoginAndRegister() {
   const exibirSplashERedirecionar = (resposta) => {
     setUsuario({
       id_usuario: resposta.id_usuario,
-      tipo_usuario: resposta.tipo,
+      tipo_usuario: resposta.tipo_usuario,
       nome: resposta.nome || '',
       cpf: resposta.cpf,
       telefone: resposta.telefone,
       data_nascimento: resposta.data_nascimento,
       cargo: resposta.cargo || '',
       id_funcionario: resposta.id_funcionario,
+      id_agencia: resposta.id_agencia,
+      nome_agencia: resposta.nome_agencia || '',
+      codigo_agencia: resposta.codigo_agencia || '',
+      endereco_agencia: resposta.endereco_agencia || null,
     });
 
     localStorage.setItem('usuarioId', resposta.id_usuario);
-    localStorage.setItem('tipo', resposta.tipo);
+    localStorage.setItem('tipo', resposta.tipo_usuario);
     localStorage.setItem('mostrandoSplash', 'true');
 
-    let path = '/user';
-    if (resposta.tipo === 'cliente') path = '/user/client';
-    else if (resposta.tipo === 'funcionario') path = '/user/employee';
+    let path = '';
+    switch (resposta.tipo_usuario) {
+      case 'cliente':
+        path = '/user/client';
+        break;
+      case 'funcionario':
+        path = '/user/employee';
+        break;
+      default:
+        path = '/';
+    }
+
 
     setRedirectPath(path);
     setShowSplash(true);

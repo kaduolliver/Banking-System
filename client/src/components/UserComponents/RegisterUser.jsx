@@ -6,7 +6,7 @@ import InputField from './LoginFormComponents/InputField';
 import PasswordField from './LoginFormComponents/PasswordField';
 import PasswordCriteria from './LoginFormComponents/PasswordCriteria';
 import { registerUsuario } from '../../services/auth/registerService';
-import { getAgencias } from '../../services/employee/agencyService'
+import { getAgencias } from '../../services/agency/agencyService'
 
 export default function RegisterUser({ onToggle }) {
   const [formData, setFormData] = useState({

@@ -1,162 +1,184 @@
 import { useState, useEffect } from 'react';
+import { Edit2 } from 'lucide-react';
 import { InputMask } from '@react-input/mask';
-import { enviarEnderecoAgencia, buscarEnderecoAgencia } from '../../../../../services/employee/agencyService';
-import StateSelect from '../../../../Common/StateSelect';
+import StateSelect from '../../../../../Common/StateSelect';
+import {
+    buscarEnderecoAgencia,
+    cadastrarEnderecoAgencia,
+    atualizarEnderecoAgencia,
+} from '../../../../../services/agency/agencyService';
+import { useAuth } from '../../../../../context/authContext';
+import { formatCEP } from '../../../../../utils/formatters';
 
 export default function AgencyAddressForm({ onEnderecoSalvo }) {
-    const [endereco, setEndereco] = useState({
-        cep: '',
-        logradouro: '',
-        numero_casa: '',
-        bairro: '',
-        estado: '',
-        complemento: '',
-    });
+    const { usuario, carregando, atualizarUsuario } = useAuth();
 
+    const [endereco, setEndereco] = useState(null);
+    const [novoEndereco, setNovoEndereco] = useState({});
+    const [editandoEndereco, setEditandoEndereco] = useState(false);
+    const [carregandoEndereco, setCarregandoEndereco] = useState(true);
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState(null);
-    const [enderecoCadastrado, setEnderecoCadastrado] = useState(null);
+
+    const agenciaId = usuario?.tipo_usuario === 'funcionario' ? usuario.id_agencia : null;
+    const isAdministrador = usuario?.tipo_usuario === 'funcionario' && usuario?.cargo === 'Admin';
 
     useEffect(() => {
         async function fetchEndereco() {
             try {
-                const data = await buscarEndereco();
-                if (data && data.cep) {
-                    setEndereco(data);
-                    setEnderecoCadastrado(true);
-                    if (onEnderecoSalvo) onEnderecoSalvo(data);
+                const data = await buscarEnderecoAgencia(agenciaId);
+                const enderecoRecebido = Array.isArray(data) ? data[0] : data;
+
+                if (enderecoRecebido && enderecoRecebido.cep) {
+                    const cepFormatado = formatCEP(enderecoRecebido.cep);
+                    setEndereco(enderecoRecebido);
+                    setNovoEndereco({ ...enderecoRecebido, cep: cepFormatado });
+
                 } else {
-                    setEnderecoCadastrado(false);
+                    setEndereco(null);
+                    setNovoEndereco({
+                        cep: '', logradouro: '', numero_casa: '', bairro: '', estado: '', complemento: '',
+                    });
                 }
             } catch (e) {
-                setEnderecoCadastrado(false);
+                setErro('Erro ao carregar endereÃ§o da agÃªncia.');
+            } finally {
+                setCarregandoEndereco(false);
             }
         }
-        fetchEndereco();
-    }, [onEnderecoSalvo]);
 
-    if (enderecoCadastrado) {
-        return (
-            <div className="p-4 text-green-400">
-                Endereço já cadastrado.
-            </div>
-        );
-    }
+        if (agenciaId && !usuario?.endereco_agencia) {
+            fetchEndereco();
+        } else if (usuario?.endereco_agencia) {
+            const enderecoUsuario = usuario.endereco_agencia;
+            const cepFormatado = formatCEP(enderecoUsuario.cep);
+            setEndereco(enderecoUsuario);
+            setNovoEndereco({ ...enderecoUsuario, cep: cepFormatado });
+            setCarregandoEndereco(false);
+        }
+    }, [agenciaId]);
 
-    function onChange(e) {
+    function handleChange(e) {
         const { name, value } = e.target;
-        setEndereco(prev => ({ ...prev, [name]: value }));
+        setNovoEndereco(prev => ({ ...prev, [name]: value }));
+        setErro(null);
     }
 
-    async function salvarAgencia() {
-        setErro(null);
-
-        const { cep, logradouro, numero_casa, bairro, estado } = endereco;
+    async function salvarEndereco() {
+        const { cep, logradouro, numero_casa, bairro, estado } = novoEndereco;
         if (!cep || !logradouro || !numero_casa || !bairro || !estado) {
-            setErro('Preencha todos os campos obrigatórios.');
+            setErro('Preencha todos os campos obrigatÃ³rios.');
             return;
         }
+
         setLoading(true);
-
-        const enderecoLimpo = {
-            ...endereco,
-            cep: endereco.cep.replace(/\D/g, ''),
-        };
-
         try {
-            await enviarEndereco(enderecoLimpo);
-            setEnderecoCadastrado(true);
-            if (onEnderecoSalvo) onEnderecoSalvo(enderecoLimpo);
+            const enderecoEnviado = { ...novoEndereco, cep: novoEndereco.cep.replace(/\D/g, '') };
+            let resultado;
+
+            if (endereco?.id_endereco) {
+                resultado = await atualizarEnderecoAgencia(agenciaId, enderecoEnviado);
+            } else {
+                resultado = await cadastrarEnderecoAgencia(agenciaId, enderecoEnviado);
+            }
+
+            atualizarUsuario({ endereco_agencia: resultado });
+            setEndereco(resultado);
+            setNovoEndereco(resultado);
+            setEditandoEndereco(false);
+            setErro(null);
+            if (onEnderecoSalvo) onEnderecoSalvo(resultado);
         } catch (e) {
-            setErro(e.message || 'Erro ao salvar endereço');
+            setErro(e.message || 'Erro ao salvar endereÃ§o.');
         } finally {
             setLoading(false);
         }
     }
 
+    if (carregando || carregandoEndereco) return <div className="text-zinc-400">Carregando endereÃ§o...</div>;
+    if (!isAdministrador) return <div className="text-red-400">VocÃª nÃ£o tem permissÃ£o para acessar esta funcionalidade.</div>;
+
     return (
-        <div className="max-w-3xl mx-auto space-y-6 p-4">
-            <h2 className="text-2xl font-semibold text-white border-b border-zinc-700 pb-2">Cadastrar Endereço</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-white">
-                <div>
-                    <label className="block text-sm mb-1">CEP *</label>
-                    <InputMask
-                        mask="_____-___"
-                        replacement={{ _: /\d/ }}
-                        name="cep"
-                        value={endereco.cep}
-                        onChange={onChange}
-                        placeholder="00000-000"
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none"
-                    />
-                </div>
+        <div className="w-full max-w-3xl mx-auto space-y-6 mt-6">
+            <h2 className="text-2xl font-semibold text-white border-b border-zinc-700 pb-2 flex justify-between">
+                EndereÃ§o da AgÃªncia
+                {!editandoEndereco && (
+                    <button
+                        onClick={() => {
+                            setNovoEndereco(endereco || {
+                                cep: '', estado: '', logradouro: '', numero_casa: '', bairro: '', complemento: '',
+                            });
+                            setEditandoEndereco(true);
+                            setErro(null);
+                        }}
+                        title={endereco ? "Editar EndereÃ§o" : "Adicionar EndereÃ§o"}
+                    >
+                        <Edit2 className="text-amber-600 hover:text-amber-200" size={20} />
+                    </button>
+                )}
+            </h2>
 
-                <div>
-                    <label className="block text-sm mb-1">Estado *</label>
-                    <StateSelect
-                        name="estado"
-                        value={endereco.estado}
-                        onChange={onChange}
-                        className="text-white"
-                    />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <label className="block text-sm mb-1">Logradouro *</label>
-                    <input
-                        name="logradouro"
-                        value={endereco.logradouro}
-                        onChange={onChange}
-                        placeholder="Rua, Avenida..."
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm mb-1">Número *</label>
-                    <input
-                        name="numero_casa"
-                        value={endereco.numero_casa}
-                        onChange={onChange}
-                        placeholder="Número"
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm mb-1">Bairro *</label>
-                    <input
-                        name="bairro"
-                        value={endereco.bairro}
-                        onChange={onChange}
-                        placeholder="Bairro"
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white"
-                    />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <label className="block text-sm mb-1">Complemento</label>
-                    <input
-                        name="complemento"
-                        value={endereco.complemento}
-                        onChange={onChange}
-                        placeholder="Apartamento, casa, etc."
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white"
-                    />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {['cep', 'estado', 'logradouro', 'numero_casa', 'bairro', 'complemento'].map(campo => (
+                    <div key={campo} className="flex flex-col">
+                        <label className="text-sm text-zinc-400">{campo.replace('_', ' ').toUpperCase()}</label>
+                        {campo === 'cep' ? (
+                            <InputMask
+                                mask="_____-___"
+                                replacement={{ _: /\d/ }}
+                                name="cep"
+                                value={novoEndereco.cep || ''}
+                                onChange={handleChange}
+                                className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                placeholder="00000-000"
+                                disabled={!editandoEndereco}
+                            />
+                        ) : campo === 'estado' ? (
+                            <StateSelect
+                                name="estado"
+                                value={novoEndereco.estado || ''}
+                                onChange={handleChange}
+                                className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                disabled={!editandoEndereco}
+                            />
+                        ) : (
+                            <input
+                                name={campo}
+                                value={novoEndereco[campo] || ''}
+                                onChange={handleChange}
+                                placeholder={campo === 'complemento' ? 'Apartamento, Casa, etc.' : ''}
+                                className={`w-full p-2 rounded bg-zinc-800 text-white outline-none ${editandoEndereco ? 'border border-amber-600' : 'opacity-70'}`}
+                                disabled={!editandoEndereco}
+                            />
+                        )}
+                    </div>
+                ))}
             </div>
 
             {erro && <div className="text-red-500">{erro}</div>}
 
-            <div className="flex space-x-2">
-                <button
-                    onClick={salvarAgencia}
-                    disabled={loading}
-                    className="px-4 py-2 bg-amber-700 rounded hover:bg-amber-600 text-white"
-                >
-                    {loading ? 'Salvando...' : 'Salvar'}
-                </button>
-            </div>
+            {editandoEndereco && (
+                <div className="flex gap-3 mt-2">
+                    <button
+                        onClick={salvarEndereco}
+                        disabled={loading}
+                        className="px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white rounded"
+                    >
+                        {loading ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setNovoEndereco(endereco || {});
+                            setEditandoEndereco(false);
+                            setErro(null);
+                        }}
+                        disabled={loading}
+                        className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

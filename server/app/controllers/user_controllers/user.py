@@ -6,21 +6,22 @@ from app.services.user_services.userData import (
 
 def user_add_endereco(data):
     try:
-        resultado = add_endereco(data)
-        return resultado, 200
+        resultado, status = add_endereco(data)
+        return resultado, status
     except Exception as e:
         return {"erro": str(e)}, 500
 
+
 def user_get_endereco():
     try:
-        resultado = get_endereco()
-        return resultado, 200
+        resultado, status = get_endereco()
+        return resultado, status
     except Exception as e:
         return {"erro": str(e)}, 500
 
 def user_atualizar_usuario(data):
     try:
-        resultado = atualizar_usuario(data)
-        return resultado, 200
+        resultado, status = atualizar_usuario(data)
+        return resultado, status
     except Exception as e:
         return {"erro": str(e)}, 500

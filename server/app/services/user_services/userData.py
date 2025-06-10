@@ -7,25 +7,23 @@ def add_endereco(data):
     if 'id_usuario' not in session:
         return {'erro': 'Usuário não autenticado.'}, 401
 
-    # Campos obrigatórios para o endereço
     cep = data.get('cep')
     logradouro = data.get('logradouro')
     numero_casa = data.get('numero_casa')
     bairro = data.get('bairro')
     estado = data.get('estado')
-    complemento = data.get('complemento')  # opcional
+    complemento = data.get('complemento') 
 
-    # Validação básica
     if not all([cep, logradouro, numero_casa, bairro, estado]):
         return {'erro': 'Campos obrigatórios ausentes.'}, 400
 
     db = SessionLocal()
     try:
-        # Verifica se já existe endereço para o usuário
+        
         endereco = db.query(Endereco).filter_by(id_usuario=session['id_usuario']).first()
 
         if endereco:
-            # Atualiza os dados
+            
             endereco.cep = cep
             endereco.logradouro = logradouro
             endereco.numero_casa = numero_casa
@@ -34,7 +32,7 @@ def add_endereco(data):
             endereco.complemento = complemento
             mensagem = 'Endereço atualizado com sucesso.'
         else:
-            # Insere novo endereço
+            
             endereco = Endereco(
                 id_usuario=session['id_usuario'],
                 cep=cep,

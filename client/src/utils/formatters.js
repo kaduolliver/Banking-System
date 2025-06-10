@@ -35,6 +35,9 @@ export function validarTelefone(telefone) {
 }
 
 export function formatCEP(cep) {
-    const digits = cep.replace(/\D/g, '');
-    return digits.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+    return cep
+        .replace(/\D/g, '')         // Remove tudo que não é dígito
+        .replace(/^(\d{5})(\d)/, '$1-$2') // Adiciona o traço depois do 5º dígito
+        .slice(0, 9);               // Limita a 9 caracteres
 }
+

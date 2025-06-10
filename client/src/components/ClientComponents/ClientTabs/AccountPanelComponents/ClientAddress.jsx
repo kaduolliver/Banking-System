@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { InputMask } from '@react-input/mask';
-import { enviarEndereco, buscarEndereco } from '../../../../services/cliente/clientService';
+import { enviarEndereco, buscarEndereco } from '../../../../services/user/userService';
 import StateSelect from '../../../../Common/StateSelect';
+import { formatCEP } from '../../../../utils/formatters';
 
 export default function ClientAddressForm({ onEnderecoSalvo }) {
     const [endereco, setEndereco] = useState({
@@ -80,16 +81,18 @@ export default function ClientAddressForm({ onEnderecoSalvo }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-white">
                 <div>
                     <label className="block text-sm mb-1">CEP *</label>
-                    <InputMask
-                        mask="_____-___"
-                        replacement={{ _: /\d/ }}
+                    <input
                         name="cep"
                         value={endereco.cep}
-                        onChange={onChange}
+                        onChange={(e) => {
+                            const formatted = formatCEP(e.target.value);
+                            setEndereco(prev => ({ ...prev, cep: formatted }));
+                        }}
                         placeholder="00000-000"
-                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none"
+                        className="w-full p-2 rounded bg-zinc-800 border border-zinc-600 outline-none text-white"
                     />
                 </div>
+
 
                 <div>
                     <label className="block text-sm mb-1">Estado *</label>

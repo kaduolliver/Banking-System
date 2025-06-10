@@ -5,7 +5,7 @@ import AdmPersonalData from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AdmP
 import FinancialRequests from '../EmployeeComponents/EmployeeTabs/AdmEmployee/FinancialRequests'
 //import ManagerConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ManagerConfig';
 //import ReportsConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ReportsConfig';
-//import AgencyConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AgencyConfig';
+import AgencyConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AgencyConfig';
 
 export default function EmployeeTabs() {
   const [activeTab, setActiveTab] = useState('dados');
@@ -27,7 +27,7 @@ export default function EmployeeTabs() {
       value: 'agency',
       label: 'Agência',
       icon: Building,
-      //content: < AgencyConfig />
+      content: < AgencyConfig />
     },
     {
       value: 'requests',

@@ -1,8 +1,8 @@
 -- COMANDOS IMPORTANTES PARA INSERIR NO BANCO DE DADOS DEPOIS DE CRIAR AS TABELAS
--- E ANTES DE PROSSEGUIR PARA A APLICAÇÃO
+-- E ANTES DE PROSSEGUIR PARA A APLICAÃ‡ÃƒO
 
 -- OBS 1: Adicione apenas depois de criar as tabelas.
--- OBS 2: Sem essas etapas não tem como prosseguir com a aplicação.
+-- OBS 2: Sem essas etapas nÃ£o tem como prosseguir com a aplicaÃ§Ã£o.
 
 -- Adicionar Agencia
 
@@ -15,8 +15,8 @@ UPDATE funcionario
 SET codigo_funcionario = 'ADM001',
     cargo = 'Admin',
     nivel_hierarquico = 3,
-    id_supervisor = NULL -- NULL porque admin não tem supervisor
-WHERE id_usuario = 1; -- quem será o admin
+    id_supervisor = NULL -- NULL porque admin nÃ£o tem supervisor
+WHERE id_usuario = 1; -- quem serÃ¡ o admin
 
 -- Adicionar Gerente (Opcional)
 
@@ -25,12 +25,12 @@ SET codigo_funcionario = 'GER001',
     cargo = 'Gerente',
     nivel_hierarquico = 2,
     id_supervisor = 1 -- id_usuario do supervisor [Admin]
-WHERE id_usuario = 2; -- quem será o gerente
+WHERE id_usuario = 2; -- quem serÃ¡ o gerente
 
---OBS 3: Todo funcionario cadastrado no sistema começa como estagiário.
+--OBS 3: Todo funcionario cadastrado no sistema comeÃ§a como estagiÃ¡rio.
 
 
--------------------------TABELAS E FUNÇÕES-------------------------------------
+-------------------------TABELAS E FUNÃ‡Ã•ES-------------------------------------
 
 CREATE TABLE usuario (
 	id_usuario SERIAL PRIMARY KEY,
@@ -42,7 +42,7 @@ CREATE TABLE usuario (
 	senha_hash VARCHAR(255) NOT NULL,
 	otp_ativo BOOLEAN DEFAULT FALSE,
 	otp_expiracao TIMESTAMP,
-	otp_codigo VARCHAR(10)
+	otp_codigo VARCHAR(10) -- ++
 );
 
 CREATE TABLE funcionario (
@@ -51,10 +51,10 @@ CREATE TABLE funcionario (
 	codigo_funcionario VARCHAR(50) UNIQUE NOT NULL,
 	cargo VARCHAR(100) NOT NULL,
 	id_supervisor INT,
-	id_agencia INT NOT NULL,
+	id_agencia INT NOT NULL, -- ++
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
 	FOREIGN KEY (id_supervisor) REFERENCES funcionario(id_funcionario),
-	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia)
+	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia) -- ++
 );
 
 CREATE TABLE cliente (
@@ -80,7 +80,7 @@ CREATE TABLE agencia (
     id_agencia SERIAL PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
     codigo_agencia VARCHAR(50) UNIQUE NOT NULL
-);
+); -- retirado a FK de endereco
 
 -- Tabela endereco (antiga)
 
@@ -102,8 +102,8 @@ CREATE TABLE agencia (
 -- 2. Admin cadastra um endereco para agencia usando id_agencia. OBS: 
 CREATE TABLE endereco (
     id_endereco SERIAL PRIMARY KEY,
-    id_usuario INT UNIQUE, -- um endereço para cada usuario
-    id_agencia INT UNIQUE, -- um endereco para cada agencia
+    id_usuario INT UNIQUE, -- ++ um endereÃ§o para cada usuario
+    id_agencia INT UNIQUE, -- ++ um endereco para cada agencia
     cep VARCHAR(10) NOT NULL,
     logradouro VARCHAR(255) NOT NULL,
     numero_casa VARCHAR(255) NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE endereco (
     complemento VARCHAR(255),
 
     CONSTRAINT fk_endereco_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
-    CONSTRAINT fk_endereco_agencia FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia),
+    CONSTRAINT fk_endereco_agencia FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia), -- ++
 	
 	-- constraint para vincular o endereco a uma agencia OU usuario, mas nunca para ambos
     CONSTRAINT endereco_usuario_ou_agencia_ck CHECK (
@@ -132,7 +132,8 @@ CREATE TABLE conta (
 	data_abertura DATE NOT NULL DEFAULT CURRENT_DATE,
 	status VARCHAR(20) NOT NULL DEFAULT 'ativa',
 	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia),
-	FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente)
+	FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+	CONSTRAINT unique_cliente_tipo_conta UNIQUE (id_cliente, tipo_conta) -- ++ apenas um tipo_conta por id_cliente
 );
 
 CREATE TABLE conta_poupanca (
@@ -208,6 +209,7 @@ CREATE TABLE relatorio (
 	FOREIGN KEY (id_funcionario) REFERENCES funcionario(id_funcionario)
 );
 
+-- ++ solicitacao enviada para o funcionario com cargo de gerente ou superior para aprovar/rejeitar
 CREATE TABLE solicitacao_conta (
   id_solicitacao SERIAL PRIMARY KEY,
   id_cliente INT NOT NULL,
@@ -223,7 +225,7 @@ CREATE TABLE solicitacao_conta (
   FOREIGN KEY (id_funcionario_aprovador) REFERENCES funcionario(id_funcionario)
 );
 
--- Função auditoria
+-- FunÃ§Ã£o auditoria
 CREATE OR REPLACE FUNCTION fn_registrar_auditoria(p_id_usuario INT, p_acao VARCHAR, p_detalhes TEXT)
 RETURNS VOID AS $$
 BEGIN
@@ -232,7 +234,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Função empréstimo
+-- FunÃ§Ã£o emprÃ©stimo
 CREATE OR REPLACE FUNCTION fn_depositar_emprestimo()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -241,14 +243,14 @@ BEGIN
       id_conta_origem, tipo_transacao, valor, data_hora, descricao
     ) VALUES (
       NEW.id_conta, 'deposito', NEW.valor_solicitado, CURRENT_TIMESTAMP,
-      CONCAT('Empréstimo ID ', NEW.id_emprestimo)
+      CONCAT('EmprÃ©stimo ID ', NEW.id_emprestimo)
     );
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Função criar conta após aprovação (antigo)
+-- FunÃ§Ã£o criar conta apÃ³s aprovaÃ§Ã£o (antigo)
 -- CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
 -- RETURNS TRIGGER AS $$
 -- DECLARE
@@ -256,21 +258,21 @@ $$ LANGUAGE plpgsql;
 --   v_id_agencia INTEGER;
 -- BEGIN
 --   IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
---     -- Gerar número da conta
+--     -- Gerar nÃºmero da conta
 --     v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
 
---     -- Buscar dinamicamente o ID da agência com código '001'
+--     -- Buscar dinamicamente o ID da agÃªncia com cÃ³digo '001'
 --     SELECT id_agencia INTO v_id_agencia
 --     FROM agencia
 --     WHERE codigo = '001'
 --     LIMIT 1;
 
---     -- Verificar se a agência foi encontrada
+--     -- Verificar se a agÃªncia foi encontrada
 --     IF v_id_agencia IS NULL THEN
---       RAISE EXCEPTION 'Agência com código 001 não encontrada. Verifique se ela foi cadastrada.';
+--       RAISE EXCEPTION 'AgÃªncia com cÃ³digo 001 nÃ£o encontrada. Verifique se ela foi cadastrada.';
 --     END IF;
 
---     -- Inserir conta vinculada à agência encontrada
+--     -- Inserir conta vinculada Ã  agÃªncia encontrada
 --     INSERT INTO conta (
 --       numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
 --     ) VALUES (
@@ -281,40 +283,40 @@ $$ LANGUAGE plpgsql;
 -- END;
 -- $$ LANGUAGE plpgsql;
 
--- Função criar conta apos aprovação (novo/atual)
+-- FunÃ§Ã£o criar conta apos aprovaÃ§Ã£o (novo/atual)
 CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_numero_conta VARCHAR(20);
-    v_id_agencia INTEGER;
+    v_numero_conta VARCHAR(20);
+    v_id_agencia INTEGER;
 BEGIN
-    IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
-        -- Gerar número da conta
-        v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+    IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+        -- Gerar nÃºmero da conta
+        v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
 
-        -- **NOVA LÓGICA AQUI: Buscar o ID da agência do funcionário aprovador**
-        -- Assumimos que NEW.id_funcionario_aprovador não será NULO se o status for APROVADO
+        -- Buscar o ID da agÃªncia do funcionÃ¡rio aprovador
         SELECT f.id_agencia INTO v_id_agencia
         FROM funcionario f
         WHERE f.id_funcionario = NEW.id_funcionario_aprovador;
 
-        -- Verificar se a agência foi encontrada
-        IF v_id_agencia IS NULL THEN
-            RAISE EXCEPTION 'Agência do funcionário aprovador (ID: %) não encontrada.', NEW.id_funcionario_aprovador;
-        END IF;
+        -- Verificar se a agÃªncia foi encontrada
+        IF v_id_agencia IS NULL THEN
+            RAISE EXCEPTION 'AgÃªncia do funcionÃ¡rio aprovador (ID: %) nÃ£o encontrada.', NEW.id_funcionario_aprovador;
+        END IF;
 
-        -- Inserir conta vinculada à agência encontrada
-        INSERT INTO conta (
-            numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
-        ) VALUES (
-            v_numero_conta, v_id_agencia, COALESCE(NEW.valor_inicial, 0.00), NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
-        );
-    END IF;
-    RETURN NEW;
+        -- Inserir conta vinculada Ã  agÃªncia encontrada
+        INSERT INTO conta (
+            numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
+        ) VALUES (
+            v_numero_conta, v_id_agencia, COALESCE(NEW.valor_inicial, 0.00), NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
+        );
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Função de limites de funcionarios por agencia
+
+-- ++ FunÃ§Ã£o de limites de funcionarios por agencia
 CREATE OR REPLACE FUNCTION fn_verificar_limite_funcionarios_agencia()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -327,7 +329,7 @@ BEGIN
       AND (TG_OP = 'INSERT' OR id_funcionario != NEW.id_funcionario);  -- evita contar a si mesmo no UPDATE
 
     IF total_funcionarios >= 20 THEN
-        RAISE EXCEPTION 'Limite máximo de 20 funcionários por agência atingido (agência ID: %)', NEW.id_agencia;
+        RAISE EXCEPTION 'Limite mÃ¡ximo de 20 funcionÃ¡rios por agÃªncia atingido (agÃªncia ID: %)', NEW.id_agencia;
     END IF;
 
     RETURN NEW;
@@ -335,7 +337,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Trigger para empréstimo
+-- Trigger para emprÃ©stimo
 CREATE TRIGGER depositar_emprestimo
 AFTER UPDATE ON emprestimo
 FOR EACH ROW
@@ -347,14 +349,14 @@ AFTER UPDATE ON solicitacao_conta
 FOR EACH ROW
 EXECUTE FUNCTION fn_criar_conta_apos_aprovacao();
 
--- Trigger para limite de funcionarios
+-- ++ Trigger para limite de funcionarios
 CREATE TRIGGER trg_limite_funcionarios_agencia
 BEFORE INSERT OR UPDATE ON funcionario
 FOR EACH ROW
 EXECUTE FUNCTION fn_verificar_limite_funcionarios_agencia();
 
 
--- View empréstimos ativos
+-- View emprÃ©stimos ativos
 CREATE OR REPLACE VIEW vw_emprestimos_ativos AS
 SELECT
 	e.id_emprestimo,

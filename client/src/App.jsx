@@ -6,7 +6,7 @@ import Home from './pages/Home';
 import Market from './pages/Market';
 import Login from './pages/Login';
 import About from './pages/About';
-import User from './pages/User';
+//import User from './pages/User';
 import CreditCard from './pages/CreditCard';
 import Client from './components/ClientComponents/Client';
 import Employee from './components/EmployeeComponents/Employee';
@@ -50,7 +50,7 @@ export default function App() {
               <Route path="/market" element={<Market />} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/about" element={<About />} />
-              <Route path="/user" element={<ProtectedRoute><User /></ProtectedRoute>} />
+              {/* <Route path="/user" element={<ProtectedRoute><User /></ProtectedRoute>} /> */}
               <Route path="/user/client" element={<ProtectedRoute tipoPermitido="cliente"><Client /></ProtectedRoute>} />
               <Route path="/user/employee" element={<ProtectedRoute tipoPermitido="funcionario"><Employee /></ProtectedRoute>} />
               <Route path="/creditcard" element={<CreditCard />} />

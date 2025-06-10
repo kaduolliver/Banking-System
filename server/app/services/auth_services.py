@@ -9,6 +9,8 @@ from app.utils.employee_functions import gerar_codigo_estagiario
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from flask import session
+from sqlalchemy.orm import joinedload
+from app.utils.user_helper import montar_dados_usuario
 
 def registrar_usuario(data):
     db = SessionLocal()
@@ -96,7 +98,10 @@ def login_usuario(data):
         if not ok:
             return {'erro': msg}, 400
 
-        usuario = db.query(Usuario).filter_by(cpf=data['cpf']).first()
+        usuario = db.query(Usuario).options(
+            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
+        ).filter_by(cpf=data['cpf']).first()
+
         if not usuario or not verificar_senha(data['senha'], usuario.senha_hash):
             return {'erro': 'CPF ou senha inválidos.'}, 401
 
@@ -111,24 +116,16 @@ def login_usuario(data):
 
         print(f"OTP para {usuario.cpf}: {otp}")
 
-        cargo = None
-        funcionario = None
-        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
-            cargo = usuario.funcionario.cargo
-            funcionario = usuario.funcionario.id_funcionario
+        dados_usuario = montar_dados_usuario(usuario)
+        endereco = dados_usuario.pop('endereco_agencia', None)
 
         return {
             'mensagem': 'OTP enviado para validação.',
             'precisa_otp': True,
-            'id_usuario': usuario.id_usuario,
-            'tipo': usuario.tipo_usuario,
-            'nome': usuario.nome,
-            'cpf': usuario.cpf,
-            'data_nascimento': usuario.data_nascimento.isoformat(),
-            'telefone': usuario.telefone,
-            'cargo': cargo,
-            'id_funcionario': funcionario
+            'endereco_agencia': endereco,
+            **dados_usuario
         }, 200
+
     
     except Exception as e:
         db.rollback()
@@ -144,7 +141,10 @@ def validar_otp(data):
         if not ok:
             return {'erro': msg}, 400
 
-        usuario = db.query(Usuario).filter_by(cpf=data['cpf'], otp_ativo=True).first()
+        usuario = db.query(Usuario).options(
+            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
+        ).filter_by(cpf=data['cpf'], otp_ativo=True).first()
+
         if not usuario or usuario.otp_codigo != data['otp']:
             return {'erro': 'OTP inválido ou não encontrado.'}, 400
 
@@ -157,30 +157,24 @@ def validar_otp(data):
 
         session['id_usuario'] = usuario.id_usuario
         session['tipo'] = usuario.tipo_usuario
-
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
             session['id_funcionario'] = usuario.funcionario.id_funcionario
             session['cargo'] = usuario.funcionario.cargo
 
         db.commit()
 
-        cargo = None
-        funcionario = None
+        dados_usuario = montar_dados_usuario(usuario)
+
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
-            cargo = usuario.funcionario.cargo
-            funcionario = usuario.funcionario.id_funcionario
+            if usuario.funcionario.agencia:
+                session['id_agencia'] = usuario.funcionario.agencia.id_agencia
+
 
         return {
             'mensagem': 'Login completo!',
-            'id_usuario': usuario.id_usuario,
-            'cpf': usuario.cpf,
-            'telefone': usuario.telefone,
-            'tipo': usuario.tipo_usuario,
-            'data_nascimento': usuario.data_nascimento.isoformat(),
-            'nome': usuario.nome,
-            'cargo': cargo,
-            'id_funcionario': funcionario
+            **dados_usuario
         }, 200
+
     except Exception as e:
         db.rollback()
         return {'erro': str(e)}, 500
@@ -194,28 +188,19 @@ def verificar_sessao():
 
     db = SessionLocal()
     try:
-        usuario = db.query(Usuario).filter_by(id_usuario=session['id_usuario']).first()
+        usuario = db.query(Usuario).options(
+            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
+        ).filter_by(id_usuario=session['id_usuario']).first()
+
         if not usuario:
             return {'erro': 'Usuário não encontrado'}, 404
 
-        cargo = None
-        funcionario = None
-        if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
-            cargo = usuario.funcionario.cargo
-            funcionario = usuario.funcionario.id_funcionario
+        dados_usuario = montar_dados_usuario(usuario)
 
         return {
             'autenticado': True,
-            'usuario': {
-                'id_usuario': usuario.id_usuario,
-                'nome': usuario.nome,
-                'cpf': usuario.cpf,
-                'telefone': usuario.telefone,
-                'data_nascimento': usuario.data_nascimento.isoformat(),
-                'tipo_usuario': usuario.tipo_usuario,
-                'cargo': cargo,
-                'id_funcionario': funcionario
-            }
+            'usuario': dados_usuario
         }, 200
+
     finally:
         db.close()

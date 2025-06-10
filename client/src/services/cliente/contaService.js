@@ -2,7 +2,7 @@ export async function verificarConta(clienteId) {
   if (!clienteId) throw new Error("ID do cliente não fornecido");
 
   const response = await fetch(`http://localhost:5000/api/cliente/${clienteId}/conta`, {
-    credentials: 'include', // <-- permite enviar cookies de sessão
+    credentials: 'include',
   });
   if (!response.ok) throw new Error("Erro ao verificar conta");
 

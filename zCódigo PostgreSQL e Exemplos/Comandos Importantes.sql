@@ -9,11 +9,11 @@ TRUNCATE TABLE conta_poupanca, conta_corrente, conta_investimento, transacao, em
 
 BEGIN;
 
--- 1. Remover o usu·rio da tabela funcionario
+-- 1. Remover o usu√°rio da tabela funcionario
 DELETE FROM funcionario
 WHERE id_usuario = (SELECT id_usuario FROM usuario WHERE cpf = '44444444444'); -- Substitua pelo CPF real
 
--- 2. Inserir o usu·rio na tabela cliente
+-- 2. Inserir o usu√°rio na tabela cliente
 INSERT INTO cliente (id_usuario, score_credito)
 VALUES ((SELECT id_usuario FROM usuario WHERE cpf = '44444444444'), 0); -- Substitua pelo CPF real e score inicial
 
@@ -32,8 +32,8 @@ UPDATE funcionario
 SET codigo_funcionario = 'ADM001',
     cargo = 'Admin',
     nivel_hierarquico = 3,
-    id_supervisor = NULL -- NULL porque admin n„o tem supervisor
-WHERE id_usuario = 1; -- quem ser· o admin
+    id_supervisor = NULL -- NULL porque admin n√£o tem supervisor
+WHERE id_usuario = 1; -- quem ser√° o admin
 
 -- Gerente
 
@@ -42,13 +42,13 @@ SET codigo_funcionario = 'GER001',
     cargo = 'Gerente',
     nivel_hierarquico = 2,
     id_supervisor = 1 -- id_usuario do supervisor [Admin]
-WHERE id_usuario = 2; -- quem ser· o gerente
+WHERE id_usuario = 2; -- quem ser√° o gerente
 
--- Estagi·rio
+-- Estagi√°rio
 
 UPDATE funcionario
 SET codigo_funcionario = 'EST001',
-    cargo = 'Estagi·rio',
+    cargo = 'Estagi√°rio',
     nivel_hierarquico = 1,
     id_supervisor = 2 -- id_usuario do supervisor [Gerente]
-WHERE id_usuario = 3; -- quem ser· o estagi·rio
+WHERE id_usuario = 3; -- quem ser√° o estagi√°rio
