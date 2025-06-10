@@ -7,7 +7,6 @@ export async function getSolicitacoesPendentes() {
     const contentType = res.headers.get('content-type');
 
     if (!res.ok) {
-      // Tenta obter texto para debugar melhor
       const text = await res.text();
       console.error('Erro de resposta:', text);
       throw new Error('Erro ao buscar solicitações.');

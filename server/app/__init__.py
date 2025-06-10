@@ -6,6 +6,7 @@ from app.routes.auth_routes import auth_bp
 from app.routes.client_routes import client_bp
 from app.routes.user_routes import user_bp
 from app.routes.employee_routes import employee_bp
+from app.routes.agency_routes import agency_bp
 
 def create_app():
     load_dotenv()
@@ -20,5 +21,6 @@ def create_app():
     app.register_blueprint(client_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(employee_bp)
+    app.register_blueprint(agency_bp)
 
     return app

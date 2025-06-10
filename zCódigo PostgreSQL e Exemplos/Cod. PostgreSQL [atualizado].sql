@@ -1,3 +1,37 @@
+-- COMANDOS IMPORTANTES PARA INSERIR NO BANCO DE DADOS DEPOIS DE CRIAR AS TABELAS
+-- E ANTES DE PROSSEGUIR PARA A APLICAÇÃO
+
+-- OBS 1: Adicione apenas depois de criar as tabelas.
+-- OBS 2: Sem essas etapas não tem como prosseguir com a aplicação.
+
+-- Adicionar Agencia
+
+INSERT INTO agencia (nome, codigo_agencia)
+VALUES ('Agencia Central', '001')
+
+-- Adicionar Admin
+
+UPDATE funcionario
+SET codigo_funcionario = 'ADM001',
+    cargo = 'Admin',
+    nivel_hierarquico = 3,
+    id_supervisor = NULL -- NULL porque admin não tem supervisor
+WHERE id_usuario = 1; -- quem será o admin
+
+-- Adicionar Gerente (Opcional)
+
+UPDATE funcionario
+SET codigo_funcionario = 'GER001',
+    cargo = 'Gerente',
+    nivel_hierarquico = 2,
+    id_supervisor = 1 -- id_usuario do supervisor [Admin]
+WHERE id_usuario = 2; -- quem será o gerente
+
+--OBS 3: Todo funcionario cadastrado no sistema começa como estagiário.
+
+
+-------------------------TABELAS E FUNÇÕES-------------------------------------
+
 CREATE TABLE usuario (
 	id_usuario SERIAL PRIMARY KEY,
 	nome VARCHAR(255) NOT NULL,
@@ -17,8 +51,10 @@ CREATE TABLE funcionario (
 	codigo_funcionario VARCHAR(50) UNIQUE NOT NULL,
 	cargo VARCHAR(100) NOT NULL,
 	id_supervisor INT,
+	id_agencia INT NOT NULL,
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
-	FOREIGN KEY (id_supervisor) REFERENCES funcionario(id_funcionario)
+	FOREIGN KEY (id_supervisor) REFERENCES funcionario(id_funcionario),
+	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia)
 );
 
 CREATE TABLE cliente (
@@ -26,6 +62,24 @@ CREATE TABLE cliente (
 	id_usuario INT UNIQUE NOT NULL,
 	score_credito NUMERIC(5, 2),
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+
+-- Tabela agencia (antiga)
+
+-- CREATE TABLE agencia (
+-- 	id_agencia SERIAL PRIMARY KEY,
+-- 	nome VARCHAR(255) NOT NULL,
+-- 	codigo_agencia VARCHAR(50) UNIQUE NOT NULL,
+-- 	endereco_id INT UNIQUE NOT NULL,
+-- 	FOREIGN KEY (endereco_id) REFERENCES endereco(id_endereco)
+-- );
+
+-- Tabela agencia (atual)
+
+CREATE TABLE agencia (
+    id_agencia SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    codigo_agencia VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- Tabela endereco (antiga)
@@ -44,7 +98,7 @@ CREATE TABLE cliente (
 
 -- Tabela endereco (atual)
 
--- 1. Admin cadastra a agencia 
+-- 1. Agencia e Admin inseridos via banco de dados 
 -- 2. Admin cadastra um endereco para agencia usando id_agencia. OBS: 
 CREATE TABLE endereco (
     id_endereco SERIAL PRIMARY KEY,
@@ -66,24 +120,6 @@ CREATE TABLE endereco (
         OR
         (id_usuario IS NULL AND id_agencia IS NOT NULL)
     )
-);
-
--- Tabela agencia (antiga)
-
--- CREATE TABLE agencia (
--- 	id_agencia SERIAL PRIMARY KEY,
--- 	nome VARCHAR(255) NOT NULL,
--- 	codigo_agencia VARCHAR(50) UNIQUE NOT NULL,
--- 	endereco_id INT UNIQUE NOT NULL,
--- 	FOREIGN KEY (endereco_id) REFERENCES endereco(id_endereco)
--- );
-
--- Tabela agencia (atual)
-
-CREATE TABLE agencia (
-    id_agencia SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    codigo_agencia VARCHAR(50) UNIQUE NOT NULL
 );
 
 CREATE TABLE conta (
@@ -181,6 +217,7 @@ CREATE TABLE solicitacao_conta (
   id_funcionario_aprovador INT,
   data_aprovacao TIMESTAMP,
   observacoes TEXT,
+  valor_inicial NUMERIC (15, 2) DEFAULT 0.00,
   
   FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
   FOREIGN KEY (id_funcionario_aprovador) REFERENCES funcionario(id_funcionario)
@@ -216,46 +253,84 @@ $$ LANGUAGE plpgsql;
 -- RETURNS TRIGGER AS $$
 -- DECLARE
 --   v_numero_conta VARCHAR(20);
+--   v_id_agencia INTEGER;
 -- BEGIN
 --   IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+--     -- Gerar número da conta
 --     v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
---     INSERT INTO conta (numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status)
---     VALUES (v_numero_conta, 1, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa');
+
+--     -- Buscar dinamicamente o ID da agência com código '001'
+--     SELECT id_agencia INTO v_id_agencia
+--     FROM agencia
+--     WHERE codigo = '001'
+--     LIMIT 1;
+
+--     -- Verificar se a agência foi encontrada
+--     IF v_id_agencia IS NULL THEN
+--       RAISE EXCEPTION 'Agência com código 001 não encontrada. Verifique se ela foi cadastrada.';
+--     END IF;
+
+--     -- Inserir conta vinculada à agência encontrada
+--     INSERT INTO conta (
+--       numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
+--     ) VALUES (
+--       v_numero_conta, v_id_agencia, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
+--     );
 --   END IF;
 --   RETURN NEW;
 -- END;
 -- $$ LANGUAGE plpgsql;
 
--- Função criar conta após aprovação (novo/atual)
+-- Função criar conta apos aprovação (novo/atual)
 CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
 RETURNS TRIGGER AS $$
 DECLARE
-  v_numero_conta VARCHAR(20);
-  v_id_agencia INTEGER;
+    v_numero_conta VARCHAR(20);
+    v_id_agencia INTEGER;
 BEGIN
-  IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
-    -- Gerar número da conta
-    v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+    IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
+        -- Gerar número da conta
+        v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
 
-    -- Buscar dinamicamente o ID da agência com código '001'
-    SELECT id_agencia INTO v_id_agencia
-    FROM agencia
-    WHERE codigo = '001'
-    LIMIT 1;
+        -- **NOVA LÓGICA AQUI: Buscar o ID da agência do funcionário aprovador**
+        -- Assumimos que NEW.id_funcionario_aprovador não será NULO se o status for APROVADO
+        SELECT f.id_agencia INTO v_id_agencia
+        FROM funcionario f
+        WHERE f.id_funcionario = NEW.id_funcionario_aprovador;
 
-    -- Verificar se a agência foi encontrada
-    IF v_id_agencia IS NULL THEN
-      RAISE EXCEPTION 'Agência com código 001 não encontrada. Verifique se ela foi cadastrada.';
+        -- Verificar se a agência foi encontrada
+        IF v_id_agencia IS NULL THEN
+            RAISE EXCEPTION 'Agência do funcionário aprovador (ID: %) não encontrada.', NEW.id_funcionario_aprovador;
+        END IF;
+
+        -- Inserir conta vinculada à agência encontrada
+        INSERT INTO conta (
+            numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
+        ) VALUES (
+            v_numero_conta, v_id_agencia, COALESCE(NEW.valor_inicial, 0.00), NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função de limites de funcionarios por agencia
+CREATE OR REPLACE FUNCTION fn_verificar_limite_funcionarios_agencia()
+RETURNS TRIGGER AS $$
+DECLARE
+    total_funcionarios INT;
+BEGIN
+    
+    SELECT COUNT(*) INTO total_funcionarios
+    FROM funcionario
+    WHERE id_agencia = NEW.id_agencia
+      AND (TG_OP = 'INSERT' OR id_funcionario != NEW.id_funcionario);  -- evita contar a si mesmo no UPDATE
+
+    IF total_funcionarios >= 20 THEN
+        RAISE EXCEPTION 'Limite máximo de 20 funcionários por agência atingido (agência ID: %)', NEW.id_agencia;
     END IF;
 
-    -- Inserir conta vinculada à agência encontrada
-    INSERT INTO conta (
-      numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
-    ) VALUES (
-      v_numero_conta, v_id_agencia, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
-    );
-  END IF;
-  RETURN NEW;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -271,6 +346,13 @@ CREATE TRIGGER trg_criar_conta_apos_aprovacao
 AFTER UPDATE ON solicitacao_conta
 FOR EACH ROW
 EXECUTE FUNCTION fn_criar_conta_apos_aprovacao();
+
+-- Trigger para limite de funcionarios
+CREATE TRIGGER trg_limite_funcionarios_agencia
+BEFORE INSERT OR UPDATE ON funcionario
+FOR EACH ROW
+EXECUTE FUNCTION fn_verificar_limite_funcionarios_agencia();
+
 
 -- View empréstimos ativos
 CREATE OR REPLACE VIEW vw_emprestimos_ativos AS

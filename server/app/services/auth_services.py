@@ -2,6 +2,7 @@ from app.database.db import SessionLocal
 from app.models.usuario import Usuario
 from app.models.cliente import Cliente
 from app.models.funcionario import Funcionario
+from app.models.agencia import Agencia
 from app.utils.security import hash_senha, gerar_otp, verificar_senha
 from app.utils.validators import validar_data, validar_campos_obrigatorios, validar_cpf
 from app.utils.employee_functions import gerar_codigo_estagiario
@@ -21,6 +22,7 @@ def registrar_usuario(data):
         cpf = data['cpf']
         tipo = data['tipo_usuario']
         senha = data['senha']
+        telefone = data['telefone'] 
 
         if tipo not in ['cliente', 'funcionario']:
             return {"erro": "Tipo de usuário inválido"}, 400
@@ -38,33 +40,47 @@ def registrar_usuario(data):
             nome=nome,
             cpf=cpf,
             data_nascimento=nascimento,
-            telefone=data['telefone'],
+            telefone=telefone,
             tipo_usuario=tipo,
             senha_hash=senha_hash
         )
 
         db.add(novo_usuario)
-        db.flush()
+        db.flush() 
 
         if tipo == 'cliente':
             db.add(Cliente(id_usuario=novo_usuario.id_usuario, score_credito=0))
-        else:
+        else: 
+            
+            id_agencia = data.get('id_agencia')
+
+            
+            if id_agencia is None:
+                
+                return {"erro": "Para tipo 'funcionario', 'id_agencia' é obrigatório."}, 400
+            
+            agencia_existente = db.query(Agencia).filter_by(id_agencia=id_agencia).first()
+            if not agencia_existente:
+                return {"erro": f"Agência com ID {id_agencia} não encontrada."}, 400
+
             codigo_gerado = gerar_codigo_estagiario(db)
             db.add(Funcionario(
                 id_usuario=novo_usuario.id_usuario,
                 codigo_funcionario=codigo_gerado,
-                cargo="Estagiário",
-                nivel_hierarquico=1,
-                id_supervisor=None  
+                cargo="Estagiário", 
+                id_supervisor=None,
+                id_agencia=id_agencia
             ))
-
 
         db.commit()
         return {"mensagem": "Usuário registrado com sucesso!"}, 200
 
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
-        return {"erro": "CPF já registrado."}, 400
+        
+        if "cpf" in str(e).lower():
+            return {"erro": "CPF já registrado."}, 400
+        return {"erro": "Erro de integridade do banco de dados: " + str(e)}, 500
     except Exception as e:
         db.rollback()
         return {"erro": str(e)}, 500

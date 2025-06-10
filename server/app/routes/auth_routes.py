@@ -1,5 +1,10 @@
 from flask import Blueprint, request, jsonify, session
-from app.controllers.auth_controller import registrar_usuario, login_usuario, validar_otp, verificar_sessao
+from app.controllers.auth_controller import (
+    registrar_usuario,
+    login_usuario,
+    validar_otp,
+    verificar_sessao
+)
 
 auth_bp = Blueprint('auth', __name__)
 

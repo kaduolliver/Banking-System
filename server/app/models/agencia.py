@@ -11,3 +11,4 @@ class Agencia(Base):
 
     endereco = relationship("Endereco", back_populates="agencia", uselist=False)
     contas = relationship("Conta", back_populates="agencia")
+    funcionarios = relationship("Funcionario", back_populates="agencia")

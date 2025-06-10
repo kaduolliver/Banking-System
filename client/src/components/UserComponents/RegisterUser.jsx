@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
 import FormContainer from './LoginFormComponents/FormContainer';
@@ -6,6 +6,7 @@ import InputField from './LoginFormComponents/InputField';
 import PasswordField from './LoginFormComponents/PasswordField';
 import PasswordCriteria from './LoginFormComponents/PasswordCriteria';
 import { registerUsuario } from '../../services/auth/registerService';
+import { getAgencias } from '../../services/employee/agencyService'
 
 export default function RegisterUser({ onToggle }) {
   const [formData, setFormData] = useState({
@@ -16,9 +17,13 @@ export default function RegisterUser({ onToggle }) {
     tipo_usuario: 'cliente',
     senha: '',
     confirmarSenha: '',
+    id_agencia: '',
   });
 
   const [erroSenha, setErroSenha] = useState('');
+  const [erroGeral, setErroGeral] = useState(''); // Novo estado para erros gerais da API
+  const [agencias, setAgencias] = useState([]); // <-- Novo estado para armazenar as agências
+  const [isLoadingAgencias, setIsLoadingAgencias] = useState(false); // Para controle de loading das agências
 
   const passwordCriteria = {
     comprimento: {
@@ -46,10 +51,28 @@ export default function RegisterUser({ onToggle }) {
   const isSenhaValida = () =>
     Object.values(passwordCriteria).every((crit) => crit.test(formData.senha));
 
+  // --- Efeito para carregar as agências ao montar o componente ---
+  useEffect(() => {
+    async function fetchAgencias() {
+      setIsLoadingAgencias(true);
+      try {
+        const response = await getAgencias(); // <--- Chame o serviço para buscar agências
+        setAgencias(response); // Assumindo que response é um array de agências
+      } catch (error) {
+        setErroGeral('Erro ao carregar agências. Tente novamente mais tarde.');
+        console.error('Erro ao buscar agências:', error);
+      } finally {
+        setIsLoadingAgencias(false);
+      }
+    }
+    fetchAgencias();
+  }, []); // Array de dependências vazio para rodar apenas uma vez
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (name === 'senha' || name === 'confirmarSenha') setErroSenha('');
+    setErroSenha('');
+    setErroGeral(''); // Limpa erro geral ao mudar algo
   };
 
   const handleSubmit = async (e) => {
@@ -65,19 +88,43 @@ export default function RegisterUser({ onToggle }) {
       return;
     }
 
+    // --- Validação para funcionário e agência ---
+    if (formData.tipo_usuario === 'funcionario' && !formData.id_agencia) {
+      setErroGeral('Por favor, selecione a agência para o funcionário.');
+      return;
+    }
+    // --- Fim da validação ---
+
     setErroSenha('');
+    setErroGeral(''); // Limpa erros antes de tentar submeter
 
     const dadosLimpos = {
       ...formData,
       cpf: formData.cpf.replace(/\D/g, ''),
-      telefone: formData.telefone.replace(/\D/g, '')
+      telefone: formData.telefone.replace(/\D/g, ''),
     };
+
+    // --- Remover id_agencia se o tipo for cliente ---
+    if (dadosLimpos.tipo_usuario === 'cliente') {
+      delete dadosLimpos.id_agencia;
+    } else {
+      // Garante que id_agencia seja um número
+      dadosLimpos.id_agencia = parseInt(dadosLimpos.id_agencia, 10);
+    }
+    // --- Fim da remoção condicional ---
 
     try {
       const data = await registerUsuario(dadosLimpos);
       alert("Registro realizado com sucesso!");
+      setFormData({ // Limpa o formulário
+        nome: '', cpf: '', data_nascimento: '', telefone: '',
+        tipo_usuario: 'cliente', senha: '', confirmarSenha: '', id_agencia: '',
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      onToggle(); // Volta para a tela de login
     } catch (error) {
-      alert("Erro ao registrar: " + error.message);
+      setErroGeral(error.message || 'Erro ao registrar usuário.');
+      console.error('Erro de registro:', error);
     }
   };
 
@@ -89,7 +136,7 @@ export default function RegisterUser({ onToggle }) {
     >
       <InputField label="Nome completo" name="nome" value={formData.nome} onChange={handleChange} />
 
-      <div className="grid grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="md:col-span-4">
           <InputField
             label="CPF"
@@ -110,7 +157,7 @@ export default function RegisterUser({ onToggle }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-4 mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4 mt-4">
         <div className="md:col-span-4">
           <InputField
             label="Telefone"
@@ -118,7 +165,7 @@ export default function RegisterUser({ onToggle }) {
             value={formData.telefone}
             onChange={handleChange}
             mask="(__) _____-____"
-            icon="phone"
+            icon="phone" // Supondo que 'phone' seja um tipo de ícone reconhecido pelo InputField
           />
         </div>
         <div className="md:col-span-3">
@@ -138,19 +185,47 @@ export default function RegisterUser({ onToggle }) {
         </div>
       </div>
 
+      {/* --- Novo campo de seleção de agência, condicional --- */}
+      {formData.tipo_usuario === 'funcionario' && (
+        <div className="relative">
+          <label htmlFor="id_agencia" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Agência
+          </label>
+          {isLoadingAgencias ? (
+            <p className="text-gray-500 dark:text-gray-400">Carregando agências...</p>
+          ) : (
+            <select
+              id="id_agencia"
+              name="id_agencia"
+              value={formData.id_agencia}
+              onChange={handleChange}
+              className="w-full p-2 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-amber-600"
+            >
+              <option value="">Selecione uma agência</option>
+              {agencias.map((agencia) => (
+                <option key={agencia.id_agencia} value={agencia.id_agencia}>
+                  {agencia.nome} ({agencia.codigo_agencia})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+      {/* --- Fim do novo campo --- */}
+
       <PasswordField label="Senha" name="senha" value={formData.senha} onChange={handleChange} />
       <PasswordField label="Confirmar Senha" name="confirmarSenha" value={formData.confirmarSenha} onChange={handleChange} />
 
       <PasswordCriteria senha={formData.senha} criteria={passwordCriteria} />
 
-      {erroSenha && (
+      {(erroSenha || erroGeral) && ( // Exibir erro de senha ou erro geral
         <motion.p
           className="text-red-600 text-sm font-medium"
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
         >
-          {erroSenha}
+          {erroSenha || erroGeral}
         </motion.p>
       )}
 
@@ -175,9 +250,7 @@ export default function RegisterUser({ onToggle }) {
         >
           Fazer login
         </button>
-
       </p>
     </FormContainer>
-
   );
 }

@@ -2,6 +2,18 @@ from app.database.db import SessionLocal
 from app.models.endereco import Endereco
 from app.models.agencia import Agencia
 
+def listar_agencias():
+    db = SessionLocal()
+    try:
+        agencias = db.query(Agencia).all()
+        return [{
+            'id_agencia': a.id_agencia,
+            'nome': a.nome,
+            'codigo_agencia': a.codigo_agencia
+        } for a in agencias]
+    finally:
+        db.close()
+
 def add_endereco_agencia(data):
     id_agencia = data.get('id_agencia')
 
