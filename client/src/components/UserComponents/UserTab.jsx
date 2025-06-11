@@ -36,7 +36,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
                 animate={{ opacity: 1, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, filter: 'blur(10px)' }}
                 transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="absolute inset-0"
+                className="absolute inset-0 overflow-y-auto pr-2"
               >
                 <div className="text-white text-base">{active.content}</div>
               </motion.div>

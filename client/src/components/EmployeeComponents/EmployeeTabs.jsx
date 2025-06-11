@@ -3,7 +3,7 @@ import { ShieldUser, SettingsIcon, HandCoins, SlidersHorizontal, ClipboardList, 
 import UserTab from '../UserComponents/UserTab';
 import AdmPersonalData from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AdmPersonalData';
 import FinancialRequests from '../EmployeeComponents/EmployeeTabs/AdmEmployee/FinancialRequests'
-//import ManagerConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ManagerConfig';
+import ManagerConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ManagerConfig';
 //import ReportsConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ReportsConfig';
 import AgencyConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AgencyConfig';
 
@@ -21,7 +21,7 @@ export default function EmployeeTabs() {
       value: 'manager',
       label: 'Gerenciamento',
       icon: SlidersHorizontal,
-      //content: < ManagerConfig />
+      content: < ManagerConfig />
     },
     {
       value: 'agency',

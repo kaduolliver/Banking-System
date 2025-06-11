@@ -160,12 +160,12 @@ export default function ClientPersonalData() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <InfoItem label="CEP" value={endereco.cep} />
-                                <InfoItem label="Estado" value={endereco.estado} />
-                                <InfoItem label="Logradouro" value={endereco.logradouro} />
-                                <InfoItem label="Número" value={endereco.numero_casa} />
-                                <InfoItem label="Bairro" value={endereco.bairro} />
-                                {endereco.complemento && <InfoItem label="Complemento" value={endereco.complemento} />}
+                                <InfoItem  label="CEP" className={enderecoStyle} value={endereco.cep} />
+                                <InfoItem label="Estado" className={enderecoStyle} value={endereco.estado} />
+                                <InfoItem label="Logradouro" className={enderecoStyle} value={endereco.logradouro} />
+                                <InfoItem label="Número" className={enderecoStyle} value={endereco.numero_casa} />
+                                <InfoItem label="Bairro" className={enderecoStyle} value={endereco.bairro} />
+                                {endereco.complemento && <InfoItem label="Complemento" className={enderecoStyle} value={endereco.complemento} />}
                             </div>
                         )
                     ) : (
@@ -176,12 +176,16 @@ export default function ClientPersonalData() {
         </div>
     );
 }
+const enderecoStyle = "w-full p-2 rounded bg-zinc-800 text-white outline-none opacity-70";
 
-function InfoItem({ label, value }) {
+function InfoItem({ label, value, className = "" }) {
     return (
         <div className="space-y-1">
             <div className="text-sm text-zinc-400">{label}</div>
-            <div className="text-base text-white font-medium">{value}</div>
+            <div className={`text-base text-white font-medium ${className}`}>{value}</div>
         </div>
     );
 }
+
+
+

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { InputMask } from '@react-input/mask';
 import { enviarEndereco, buscarEndereco } from '../../../../services/user/userService';
 import StateSelect from '../../../../Common/StateSelect';
 import { formatCEP } from '../../../../utils/formatters';

@@ -21,7 +21,7 @@ export default function AgencyAddressForm({ onEnderecoSalvo }) {
     const [erro, setErro] = useState(null);
 
     const agenciaId = usuario?.tipo_usuario === 'funcionario' ? usuario.id_agencia : null;
-    const isAdministrador = usuario?.tipo_usuario === 'funcionario' && usuario?.cargo === 'Admin';
+    const isAdministrador = usuario?.tipo_usuario === 'funcionario' && (usuario?.cargo === 'Admin');
 
     useEffect(() => {
         async function fetchEndereco() {
@@ -96,13 +96,12 @@ export default function AgencyAddressForm({ onEnderecoSalvo }) {
     }
 
     if (carregando || carregandoEndereco) return <div className="text-zinc-400">Carregando endereço...</div>;
-    if (!isAdministrador) return <div className="text-red-400">Você não tem permissão para acessar esta funcionalidade.</div>;
 
     return (
         <div className="w-full max-w-3xl mx-auto space-y-6 mt-6">
             <h2 className="text-2xl font-semibold text-white border-b border-zinc-700 pb-2 flex justify-between">
                 Endereço da Agência
-                {!editandoEndereco && (
+                {!editandoEndereco && isAdministrador && (
                     <button
                         onClick={() => {
                             setNovoEndereco(endereco || {
@@ -117,6 +116,10 @@ export default function AgencyAddressForm({ onEnderecoSalvo }) {
                     </button>
                 )}
             </h2>
+
+            {!isAdministrador && (
+                <div className="text-red-400 text-sm mt-1">Você não tem permissão para editar o endereço da agência.</div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {['cep', 'estado', 'logradouro', 'numero_casa', 'bairro', 'complemento'].map(campo => (

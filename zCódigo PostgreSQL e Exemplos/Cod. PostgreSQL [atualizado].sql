@@ -51,7 +51,9 @@ CREATE TABLE funcionario (
 	codigo_funcionario VARCHAR(50) UNIQUE NOT NULL,
 	cargo VARCHAR(100) NOT NULL,
 	id_supervisor INT,
+	nivel_hierarquico INT,
 	id_agencia INT NOT NULL, -- ++
+	inativo BOOLEAN DEFAULT FALSE, -- ++ status do funcionario FALSE = ativo / TRUE = inativo (considerar trigger limite de funcionario depois)
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
 	FOREIGN KEY (id_supervisor) REFERENCES funcionario(id_funcionario),
 	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia) -- ++

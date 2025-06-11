@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ClientAddressForm from './AccountPanelComponents/ClientAddress';
 import FinancialServices from './AccountPanelComponents/ClientAccountRequest';
-import ScreenOverlay from '../../EffectsComponents/ScreenOverlay';
+//import ScreenOverlay from '../../EffectsComponents/ScreenOverlay';
 
 export default function ClientAccountPanel() {
   const [enderecoSalvo, setEnderecoSalvo] = useState(false);
@@ -14,7 +14,7 @@ export default function ClientAccountPanel() {
 
       {enderecoSalvo && (
         <>
-          <ScreenOverlay />
+          {/* <ScreenOverlay /> */}
           {/* <div className="text-green-400 p-4">
             Endereço cadastrado com sucesso!
           </div> */}
