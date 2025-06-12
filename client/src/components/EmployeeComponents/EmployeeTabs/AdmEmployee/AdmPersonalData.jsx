@@ -98,7 +98,17 @@ export default function AdmPersonalData() {
                     </div>
                     <InfoItem label="Tipo de Usuário" value={capitalize(usuario.tipo_usuario)} />
                     <InfoItem label="Data de Nascimento" value={formatData(usuario.data_nascimento)} />
-                    <InfoItem label="Cargo" value={usuario.cargo} />
+                    <InfoItem
+                        label="Cargo / Status"
+                        value={
+                            <>
+                                {usuario.cargo} /{" "}
+                                <span className={usuario.status_funcionario ? "text-red-500" : "text-green-500"}>
+                                    {usuario.status_funcionario ? "Inativo" : "Ativo"}
+                                </span>
+                            </>
+                        }
+                    />
                 </div>
 
                 <div className="mt-8 space-y-4">

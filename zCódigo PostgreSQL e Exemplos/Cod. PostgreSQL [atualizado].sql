@@ -7,24 +7,26 @@
 -- Adicionar Agencia
 
 INSERT INTO agencia (nome, codigo_agencia)
-VALUES ('Agencia Central', '001')
+VALUES ('Agencia Central', '001');
 
 -- Adicionar Admin
 
 UPDATE funcionario
-SET codigo_funcionario = 'ADM001',
-    cargo = 'Admin',
+SET cargo = 'Admin',
     nivel_hierarquico = 3,
+	inativo = false, -- o status do admin nunca deve ser true
     id_supervisor = NULL -- NULL porque admin não tem supervisor
+	codigo_funcionario = NULL -- obrigatório para funcionar com a função/trigger de incremento
 WHERE id_usuario = 1; -- quem será o admin
 
--- Adicionar Gerente (Opcional)
+-- Adicionar Gerente
 
 UPDATE funcionario
-SET codigo_funcionario = 'GER001',
-    cargo = 'Gerente',
+SET cargo = 'Gerente',
     nivel_hierarquico = 2,
-    id_supervisor = 1 -- id_usuario do supervisor [Admin]
+	inativo = false, -- false para entrar com funcionario ativo
+    id_supervisor = 1, -- id_usuario do supervisor [Admin]
+	codigo_funcionario = NULL -- obrigatório para funcionar com a função/trigger de incremento
 WHERE id_usuario = 2; -- quem será o gerente
 
 --OBS 3: Todo funcionario cadastrado no sistema começa como estagiário.
@@ -53,7 +55,7 @@ CREATE TABLE funcionario (
 	id_supervisor INT,
 	nivel_hierarquico INT,
 	id_agencia INT NOT NULL, -- ++
-	inativo BOOLEAN DEFAULT FALSE, -- ++ status do funcionario FALSE = ativo / TRUE = inativo (considerar trigger limite de funcionario depois)
+	inativo BOOLEAN DEFAULT TRUE, -- ++ status do funcionario FALSE = ativo / TRUE = inativo (considerar trigger limite de funcionario depois)
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
 	FOREIGN KEY (id_supervisor) REFERENCES funcionario(id_funcionario),
 	FOREIGN KEY (id_agencia) REFERENCES agencia(id_agencia) -- ++
@@ -126,7 +128,7 @@ CREATE TABLE endereco (
 
 CREATE TABLE conta (
 	id_conta SERIAL PRIMARY KEY,
-	numero_conta VARCHAR(20) UNIQUE NOT NULL,
+	numero_conta VARCHAR(30) UNIQUE NOT NULL,
 	id_agencia INT NOT NULL,
 	saldo NUMERIC(15, 2) NOT NULL DEFAULT 0.00,
 	tipo_conta VARCHAR(50) NOT NULL CHECK (tipo_conta IN ('corrente', 'poupanca', 'investimento')),
@@ -289,33 +291,67 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_numero_conta VARCHAR(20);
+    v_numero_base TEXT;
+    v_numero_conta VARCHAR(30);
     v_id_agencia INTEGER;
+    v_id_nova_conta INT;
+    v_dv INT;
+    v_soma INT := 0;
+    v_char CHAR;
+    v_digit INT;
 BEGIN
     IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
-        -- Gerar número da conta
-        v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+        -- Construir base do número da conta
+        v_numero_base := TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
+
+        -- Calcular dígito verificador (DV) com módulo 10
+        FOR i IN 1..LENGTH(v_numero_base) LOOP
+            v_char := SUBSTRING(v_numero_base FROM i FOR 1);
+            IF v_char ~ '[0-9]' THEN
+                v_digit := CAST(v_char AS INT);
+                v_soma := v_soma + v_digit;
+            END IF;
+        END LOOP;
+
+        v_dv := v_soma % 10;
+
+        -- Gerar número final da conta com DV
+        v_numero_conta := 'BR' || v_numero_base || v_dv;
 
         -- Buscar o ID da agência do funcionário aprovador
         SELECT f.id_agencia INTO v_id_agencia
         FROM funcionario f
         WHERE f.id_funcionario = NEW.id_funcionario_aprovador;
 
-        -- Verificar se a agência foi encontrada
         IF v_id_agencia IS NULL THEN
             RAISE EXCEPTION 'Agência do funcionário aprovador (ID: %) não encontrada.', NEW.id_funcionario_aprovador;
         END IF;
 
-        -- Inserir conta vinculada à agência encontrada
+        -- Inserir conta
         INSERT INTO conta (
             numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
         ) VALUES (
-            v_numero_conta, v_id_agencia, COALESCE(NEW.valor_inicial, 0.00), NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
-        );
+            v_numero_conta, v_id_agencia, COALESCE(NEW.valor_inicial, 0.00),
+            NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
+        )
+        RETURNING id_conta INTO v_id_nova_conta;
+
+        -- Inserir dados específicos conforme tipo da conta
+        IF NEW.tipo_conta = 'poupanca' THEN
+            INSERT INTO conta_poupanca (id_conta, taxa_rendimento, ultimo_rendimento)
+            VALUES (v_id_nova_conta, 0.005, 0.00);
+        ELSIF NEW.tipo_conta = 'corrente' THEN
+            INSERT INTO conta_corrente (id_conta, limite, data_vencimento, taxa_manutencao)
+            VALUES (v_id_nova_conta, 0.00, CURRENT_DATE + INTERVAL '1 year', 0.00);
+        ELSIF NEW.tipo_conta = 'investimento' THEN
+            INSERT INTO conta_investimento (id_conta, perfil_risco, valor_minimo, taxa_rendimento_base)
+            VALUES (v_id_nova_conta, 'conservador', 0.00, 0.009);
+        END IF;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 -- ++ Função de limites de funcionarios por agencia
@@ -339,6 +375,45 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Função de incremento no código do Gerente e Admin
+CREATE OR REPLACE FUNCTION gerar_codigo_funcionario()
+RETURNS TRIGGER AS $$
+DECLARE
+    prefixo TEXT;
+    ultimo_codigo TEXT;
+    numero_inteiro INTEGER;
+BEGIN
+    IF (TG_OP = 'INSERT' AND NEW.codigo_funcionario IS NULL)
+       OR (TG_OP = 'UPDATE' AND NEW.codigo_funcionario IS DISTINCT FROM OLD.codigo_funcionario AND NEW.cargo <> OLD.cargo) THEN
+
+        IF NEW.cargo = 'Admin' THEN
+            prefixo := 'ADM';
+        ELSIF NEW.cargo = 'Gerente' THEN
+            prefixo := 'GER';
+        ELSE
+            prefixo := 'EST';
+        END IF;
+
+        SELECT MAX(codigo_funcionario)
+        INTO ultimo_codigo
+        FROM funcionario
+        WHERE codigo_funcionario LIKE prefixo || '%';
+
+        IF ultimo_codigo IS NOT NULL THEN
+            numero_inteiro := CAST(SUBSTRING(ultimo_codigo FROM '[0-9]+$') AS INTEGER) + 1;
+        ELSE
+            numero_inteiro := 1;
+        END IF;
+
+        NEW.codigo_funcionario := prefixo || LPAD(numero_inteiro::TEXT, 3, '0');
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 -- Trigger para empréstimo
 CREATE TRIGGER depositar_emprestimo
 AFTER UPDATE ON emprestimo
@@ -356,6 +431,22 @@ CREATE TRIGGER trg_limite_funcionarios_agencia
 BEFORE INSERT OR UPDATE ON funcionario
 FOR EACH ROW
 EXECUTE FUNCTION fn_verificar_limite_funcionarios_agencia();
+
+-- ++ Trigger de incremento codigo admin/gerente
+CREATE TRIGGER trigger_gerar_codigo_funcionario_insert
+BEFORE INSERT ON funcionario
+FOR EACH ROW
+WHEN (NEW.codigo_funcionario IS NULL)
+EXECUTE FUNCTION gerar_codigo_funcionario();
+
+CREATE TRIGGER trigger_gerar_codigo_funcionario_update
+BEFORE UPDATE ON funcionario
+FOR EACH ROW
+WHEN (
+    NEW.codigo_funcionario IS DISTINCT FROM OLD.codigo_funcionario AND
+    NEW.cargo <> OLD.cargo
+)
+EXECUTE FUNCTION gerar_codigo_funcionario();
 
 
 -- View empréstimos ativos

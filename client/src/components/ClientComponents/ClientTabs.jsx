@@ -3,7 +3,7 @@ import { UserIcon, SettingsIcon, CircleDollarSign, Wallet, Bitcoin, CreditCard }
 import UserTab from '../UserComponents/UserTab';
 import AccountPanel from './ClientTabs/ClientAccountPanel';
 import PersonalData from './ClientTabs/ClientPersonalData';
-//import FinancialServices from './ClientTabs/ClientFinancialServices';
+import FinancialServices from './ClientTabs/ClientFinancialServices';
 
 export default function ClientTabs() {
     const [activeTab, setActiveTab] = useState('conta');
@@ -25,7 +25,7 @@ export default function ClientTabs() {
             value: 'servicos',
             label: 'Financeiro',
             icon: CircleDollarSign,
-            //content: <FinancialServices />,
+            content: <FinancialServices />,
         },
         {
             value: 'cripto',

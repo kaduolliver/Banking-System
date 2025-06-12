@@ -23,7 +23,6 @@ export default function LoginAndRegister() {
   const navigate = useNavigate();
 
   const handleSplashComplete = () => {
-    console.log('Splash completo! Redirecionando para', redirectPath);
     localStorage.removeItem('mostrandoSplash');
     if (redirectPath) {
       navigate(redirectPath);
@@ -31,6 +30,7 @@ export default function LoginAndRegister() {
   };
 
   const exibirSplashERedirecionar = (resposta) => {
+
     setUsuario({
       id_usuario: resposta.id_usuario,
       tipo_usuario: resposta.tipo_usuario,
@@ -40,6 +40,7 @@ export default function LoginAndRegister() {
       data_nascimento: resposta.data_nascimento,
       cargo: resposta.cargo || '',
       id_funcionario: resposta.id_funcionario,
+      status_funcionario: resposta.status_funcionario,
       id_agencia: resposta.id_agencia,
       nome_agencia: resposta.nome_agencia || '',
       codigo_agencia: resposta.codigo_agencia || '',
@@ -49,7 +50,7 @@ export default function LoginAndRegister() {
     localStorage.setItem('usuarioId', resposta.id_usuario);
     localStorage.setItem('tipo', resposta.tipo_usuario);
     localStorage.setItem('mostrandoSplash', 'true');
-
+    
     let path = '';
     switch (resposta.tipo_usuario) {
       case 'cliente':

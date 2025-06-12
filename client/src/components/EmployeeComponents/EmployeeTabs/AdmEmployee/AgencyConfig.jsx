@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import AgencyAddressForm from './AgencyComponents/AgencyAddress'
+import AgencyAddressForm from '../AgencyComponents/AgencyAddress'
 import { useAuth } from '../../../../context/authContext';
 
 export default function AgencyConfig() {

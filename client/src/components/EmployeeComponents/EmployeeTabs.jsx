@@ -6,9 +6,14 @@ import FinancialRequests from '../EmployeeComponents/EmployeeTabs/AdmEmployee/Fi
 import ManagerConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ManagerConfig';
 //import ReportsConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ReportsConfig';
 import AgencyConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AgencyConfig';
+import { useAuth } from '../../context/authContext';
 
 export default function EmployeeTabs() {
+  const { usuario } = useAuth();
   const [activeTab, setActiveTab] = useState('dados');
+  const isAdministrador = usuario?.tipo_usuario === 'funcionario' && (usuario?.cargo === 'Admin');
+  const isManager = usuario?.tipo_usuario === 'funcionario' && (usuario?.cargo === 'Admin' || usuario?.cargo === 'Gerente');
+  const isInactive = usuario?.tipo_usuario === 'funcionario' && (usuario?.status_funcionario === false)
 
   const tabs = [
     {
@@ -17,25 +22,25 @@ export default function EmployeeTabs() {
       icon: ShieldUser,
       content: < AdmPersonalData />
     },
-    {
+    isAdministrador && {
       value: 'manager',
       label: 'Gerenciamento',
       icon: SlidersHorizontal,
       content: < ManagerConfig />
     },
-    {
+    isManager && isInactive && {
       value: 'agency',
       label: 'Agência',
       icon: Building,
       content: < AgencyConfig />
     },
-    {
+    isInactive && {
       value: 'requests',
       label: 'Solicitações',
       icon: HandCoins,
       content: < FinancialRequests />
     },
-    {
+    isInactive && {
       value: 'reports',
       label: 'Relatórios',
       icon: ClipboardList,
@@ -52,7 +57,7 @@ export default function EmployeeTabs() {
         </div>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   return <UserTab tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />;
 }

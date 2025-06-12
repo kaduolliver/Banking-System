@@ -7,7 +7,7 @@ class Conta(Base):
     __tablename__ = 'conta'
 
     id_conta = Column(Integer, primary_key=True)
-    numero_conta = Column(String(20), unique=True, nullable=False)
+    numero_conta = Column(String(30), unique=True, nullable=False)
     id_agencia = Column(Integer, ForeignKey('agencia.id_agencia'), nullable=False)
     saldo = Column(Numeric(15, 2), nullable=False, default=0.00)
     tipo_conta = Column(String(50), nullable=False)

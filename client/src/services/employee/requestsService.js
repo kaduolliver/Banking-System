@@ -9,15 +9,15 @@ export async function getSolicitacoesPendentes() {
     if (!res.ok) {
       const text = await res.text();
       console.error('Erro de resposta:', text);
-      throw new Error('Erro ao buscar solicitaÁıes.');
+      throw new Error('Erro ao buscar solicita√ß√µes.');
     }
 
     if (contentType && contentType.includes('application/json')) {
       return await res.json();
     } else {
       const text = await res.text();
-      console.error('Resposta n„o JSON recebida:', text);
-      throw new Error('Resposta do servidor n„o est· em formato JSON.');
+      console.error('Resposta n√£o JSON recebida:', text);
+      throw new Error('Resposta do servidor n√£o est√° em formato JSON.');
     }
   } catch (error) {
     console.error(error);
@@ -32,7 +32,7 @@ export async function aprovarSolicitacao(id) {
       method: 'POST',
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Erro ao aprovar solicitaÁ„o.');
+    if (!res.ok) throw new Error('Erro ao aprovar solicita√ß√£o.');
     return await res.json();
   } catch (error) {
     console.error(error);
@@ -46,7 +46,7 @@ export async function rejeitarSolicitacao(id) {
       method: 'POST',
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Erro ao rejeitar solicitaÁ„o.');
+    if (!res.ok) throw new Error('Erro ao rejeitar solicita√ß√£o.');
     return await res.json();
   } catch (error) {
     console.error(error);

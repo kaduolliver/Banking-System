@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Edit2 } from 'lucide-react';
 import { InputMask } from '@react-input/mask';
-import StateSelect from '../../../../../Common/StateSelect';
+import StateSelect from '../../../../Common/StateSelect';
 import {
     buscarEnderecoAgencia,
     cadastrarEnderecoAgencia,
     atualizarEnderecoAgencia,
-} from '../../../../../services/agency/agencyService';
-import { useAuth } from '../../../../../context/authContext';
-import { formatCEP } from '../../../../../utils/formatters';
+} from '../../../../services/agency/agencyService';
+import { useAuth } from '../../../../context/authContext';
+import { formatCEP } from '../../../../utils/formatters';
 
 export default function AgencyAddressForm({ onEnderecoSalvo }) {
     const { usuario, carregando, atualizarUsuario } = useAuth();

@@ -11,7 +11,7 @@ export default function FinancialRequests() {
   const [removendo, setRemovendo] = useState([]);
 
   useEffect(() => {
-    if (!carregandoAuth && usuario?.cargo === 'Admin' || usuario?.cargo === 'Gerente') {
+    if (!carregandoAuth && usuario?.cargo === 'Admin' || usuario?.cargo === 'Gerente' || usuario?.cargo === 'Estagiário') {
       fetchSolicitacoes();
     }
   }, [carregandoAuth, usuario]);
@@ -34,7 +34,7 @@ export default function FinancialRequests() {
     setTimeout(() => {
       setSolicitacoes((prev) => prev.filter((s) => s.id_solicitacao !== id));
       setRemovendo((prev) => prev.filter((rid) => rid !== id));
-    }, 500); 
+    }, 500);
   };
 
   const handleAprovar = async (id) => {
@@ -63,9 +63,11 @@ export default function FinancialRequests() {
     }
   };
 
+  const isManager = usuario?.tipo_usuario === 'funcionario' && (usuario?.cargo === 'Admin' || usuario?.cargo === 'Gerente');
+
   if (carregandoAuth) return <p className="text-xl font-semibold mt-6 text-center text-gray-400">Verificando autenticação...</p>;
 
-  if (!usuario || (usuario.cargo !== 'Admin' && usuario.cargo !== 'Gerente')) {
+  if (!usuario || (usuario.cargo !== 'Admin' && usuario.cargo !== 'Gerente' && usuario.cargo !== 'Estagiário')) {
     return <p className="text-xl font-semibold mt-6 text-center text-red-400">Acesso negado. Permissão insuficiente.</p>;
   }
 
@@ -111,22 +113,25 @@ export default function FinancialRequests() {
               </p>
             </div>
 
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => handleAprovar(s.id_solicitacao)}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={processing === s.id_solicitacao}
-              >
-                {processing === s.id_solicitacao ? 'Aprovando...' : 'Aprovar'}
-              </button>
-              <button
-                onClick={() => handleRejeitar(s.id_solicitacao)}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={processing === s.id_solicitacao}
-              >
-                {processing === s.id_solicitacao ? 'Rejeitando...' : 'Rejeitar'}
-              </button>
-            </div>
+            {isManager && (
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => handleAprovar(s.id_solicitacao)}
+                  className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={processing === s.id_solicitacao}
+                >
+                  {processing === s.id_solicitacao ? 'Aprovando...' : 'Aprovar'}
+                </button>
+                <button
+                  onClick={() => handleRejeitar(s.id_solicitacao)}
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={processing === s.id_solicitacao}
+                >
+                  {processing === s.id_solicitacao ? 'Rejeitando...' : 'Rejeitar'}
+                </button>
+              </div>
+            )}
+
           </div>
         );
       })}

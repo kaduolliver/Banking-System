@@ -2,29 +2,12 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-export default function ClientAccountData() {
+const tiposConta = ['poupanca', 'corrente', 'investimento'];
+
+export default function ClientAccountData({ dadosConta }) {
     const [tipoSelecionado, setTipoSelecionado] = useState('poupanca');
 
-    const dadosConta = {
-        agencia: '1234',
-        numero: '987654',
-        contas: {
-            poupanca: {
-                taxa_rendimento: 0.015,
-                ultimo_rendimento: 85.73,
-            },
-            corrente: {
-                limite: 2500.00,
-                data_vencimento: '2025-06-30',
-                taxa_manutencao: 0.01,
-            },
-            investimento: {
-                perfil_risco: 'agressivo',
-                valor_minimo: 5000.00,
-                taxa_rendimento_base: 0.045,
-            },
-        },
-    };
+    if (!dadosConta) return <div className="text-red-400">Conta não encontrada.</div>;
 
     const { agencia, numero, contas } = dadosConta;
 
@@ -40,7 +23,7 @@ export default function ClientAccountData() {
 
                 <Tabs.Root value={tipoSelecionado} onValueChange={setTipoSelecionado}>
                     <Tabs.List className="flex space-x-4 mt-6">
-                        {['poupanca', 'corrente', 'investimento'].map((tipo) => (
+                        {tiposConta.map(tipo => (
                             <Tabs.Trigger
                                 key={tipo}
                                 value={tipo}
@@ -62,6 +45,7 @@ export default function ClientAccountData() {
                                 key="poupanca"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
                                 className="grid grid-cols-1 sm:grid-cols-2 gap-6"
                             >
                                 <InfoItem label="Taxa de Rendimento" value={formatPorcentagem(contas.poupanca?.taxa_rendimento)} />
@@ -74,6 +58,7 @@ export default function ClientAccountData() {
                                 key="corrente"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
                                 className="grid grid-cols-1 sm:grid-cols-2 gap-6"
                             >
                                 <InfoItem label="Limite" value={formatMoeda(contas.corrente?.limite)} />
@@ -87,6 +72,7 @@ export default function ClientAccountData() {
                                 key="investimento"
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
                                 className="grid grid-cols-1 sm:grid-cols-2 gap-6"
                             >
                                 <InfoItem label="Perfil de Risco" value={capitalize(contas.investimento?.perfil_risco)} />

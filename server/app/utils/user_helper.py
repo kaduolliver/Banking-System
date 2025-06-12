@@ -8,10 +8,12 @@ def montar_dados_usuario(usuario):
     codigo_agencia = None
     endereco = None
     status_endereco = None
+    inativo = None
 
     if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
         cargo = usuario.funcionario.cargo
         id_funcionario = usuario.funcionario.id_funcionario
+        inativo = usuario.funcionario.inativo
         if usuario.funcionario.agencia:
             id_agencia = usuario.funcionario.agencia.id_agencia
             nome_agencia = usuario.funcionario.agencia.nome
@@ -29,6 +31,7 @@ def montar_dados_usuario(usuario):
         'telefone': usuario.telefone,
         'cargo': cargo,
         'id_funcionario': id_funcionario,
+        'status_funcionario': inativo,
         'id_agencia': id_agencia,
         'nome_agencia': nome_agencia,
         'codigo_agencia': codigo_agencia,
