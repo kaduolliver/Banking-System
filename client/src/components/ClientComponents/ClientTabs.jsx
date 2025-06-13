@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { UserIcon, SettingsIcon, CircleDollarSign, Wallet, Bitcoin, CreditCard } from 'lucide-react';
+import { UserIcon, SettingsIcon, CircleDollarSign, Wallet, Bitcoin, CreditCard, HandCoins } from 'lucide-react';
 import UserTab from '../UserComponents/UserTab';
 import AccountPanel from './ClientTabs/ClientAccountPanel';
 import PersonalData from './ClientTabs/ClientPersonalData';
-import FinancialServices from './ClientTabs/ClientFinancialServices';
+//import FinancialServices from './ClientTabs/ClientFinancialServices';
+import ClientRequests from './ClientTabs/ClientRequests';
 
 export default function ClientTabs() {
     const [activeTab, setActiveTab] = useState('conta');
@@ -22,17 +23,23 @@ export default function ClientTabs() {
             content: <PersonalData />,
         },
         {
+            value: 'accountRequest',
+            label: 'Solicitações',
+            icon: HandCoins,
+            content: <ClientRequests />
+        },  
+        {
             value: 'servicos',
             label: 'Financeiro',
             icon: CircleDollarSign,
-            content: <FinancialServices />,
+            //content: <FinancialServices />,
         },
-        {
-            value: 'cripto',
-            label: 'Cripto',
-            icon: Bitcoin,
-            //content: <CriptoServices />,
-        },
+        // {
+        //     value: 'cripto',
+        //     label: 'Cripto',
+        //     icon: Bitcoin,
+        //     //content: <CriptoServices />,
+        // },
         {
             value: 'cartao',
             label: 'Cartão',

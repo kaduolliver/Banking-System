@@ -45,6 +45,8 @@ export default function LoginAndRegister() {
       nome_agencia: resposta.nome_agencia || '',
       codigo_agencia: resposta.codigo_agencia || '',
       endereco_agencia: resposta.endereco_agencia || null,
+      contas: resposta.contas || [],
+      solicitacoes_conta: resposta.solicitacoes_conta,
     });
 
     localStorage.setItem('usuarioId', resposta.id_usuario);

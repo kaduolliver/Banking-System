@@ -3,13 +3,14 @@ from app.models.usuario import Usuario
 from app.models.cliente import Cliente
 from app.models.funcionario import Funcionario
 from app.models.agencia import Agencia
+from app.models.conta import Conta
 from app.utils.security import hash_senha, gerar_otp, verificar_senha
 from app.utils.validators import validar_data, validar_campos_obrigatorios, validar_cpf
 from app.utils.employee_functions import gerar_codigo_estagiario
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 from flask import session
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, subqueryload
 from app.utils.user_helper import montar_dados_usuario
 
 def registrar_usuario(data):
@@ -142,8 +143,21 @@ def validar_otp(data):
             return {'erro': msg}, 400
 
         usuario = db.query(Usuario).options(
-            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
+            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.contas)
+                .joinedload(Conta.agencia),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.contas)
+                .joinedload(Conta.corrente),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.contas)
+                .joinedload(Conta.poupanca),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.contas)
+                .joinedload(Conta.investimento)
         ).filter_by(cpf=data['cpf'], otp_ativo=True).first()
+
 
         if not usuario or usuario.otp_codigo != data['otp']:
             return {'erro': 'OTP inválido ou não encontrado.'}, 400
@@ -189,7 +203,10 @@ def verificar_sessao():
     db = SessionLocal()
     try:
         usuario = db.query(Usuario).options(
-            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
+            joinedload(Usuario.funcionario).joinedload(Funcionario.agencia),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.contas)
+                .joinedload(Conta.agencia)
         ).filter_by(id_usuario=session['id_usuario']).first()
 
         if not usuario:

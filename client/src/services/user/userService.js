@@ -62,3 +62,15 @@ export async function buscarEndereco() {
     throw error;
   }
 }
+
+// export async function buscarUsuarioAtualizado() {
+//   const response = await fetch('http://localhost:5000/api/usuario', {
+//     credentials: 'include',
+//   });
+
+//   if (!response.ok) {
+//     throw new Error("Erro ao buscar dados atualizados do usuário");
+//   }
+
+//   return await response.json();
+// }

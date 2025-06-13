@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake } from "lucide-react";
+import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake, CreditCard } from "lucide-react";
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
 
@@ -39,6 +39,9 @@ const ClientNavbar = () => {
       ? '/user/employee'
       : '/';
 
+  const saldo = usuario?.contas?.[0]?.saldo ?? 0;
+
+
   return (
     <>
       {/* NAVBAR */}
@@ -52,9 +55,9 @@ const ClientNavbar = () => {
               Olá, {usuario?.nome ? usuario.nome.split(' ').slice(0, 2).join(' ') : 'usuário'}
             </a>
 
-            <Link to="/market" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400">
-              <Landmark />
-              <span className="relative top-1">Mercado</span>
+            <Link to="/creditcard" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400">
+              <CreditCard className="relative top-1"/>
+              <span className="relative top-1">Cartão</span>
               <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
@@ -64,10 +67,11 @@ const ClientNavbar = () => {
               <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            <Link to="/" className="hover:text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
+            <p to="/" className="hover:text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
               <Banknote />
-              Saldo
-            </Link>
+              {saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+
+            </p>
           </nav>
 
           <div className="relative right-10 flex items-center gap-10" style={{ fontFamily: 'Aileron, sans-serif' }}>

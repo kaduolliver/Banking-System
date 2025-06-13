@@ -7,7 +7,7 @@ export async function verificarConta(clienteId) {
   if (!response.ok) throw new Error("Erro ao verificar conta");
 
   const data = await response.json();
-  return data.temConta;
+  return data;
 }
 
 export async function solicitarAberturaConta(clienteId, tipoConta) {

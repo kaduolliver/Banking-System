@@ -25,7 +25,7 @@ def solicitar_abertura_conta(id_usuario, data):
         ).first()
 
         if solicitacao_existente:
-            raise ValueError('Já existe uma solicitação pendente para esse tipo de conta.')
+            raise ValueError('Já existe uma solicitação pendente para abertura de conta.')
 
         nova = SolicitacaoConta(
             id_cliente=cliente_id,
@@ -50,7 +50,11 @@ def verificar_possui_conta(id_usuario):
         if not cliente:
             raise LookupError('Cliente não encontrado.')
 
-        conta = db.query(Conta).filter_by(id_cliente=cliente.id_cliente).first()
-        return {'temConta': conta is not None}
+        contas = db.query(Conta).filter_by(id_cliente=cliente.id_cliente).all()
+        
+        return {
+            'temConta': len(contas) > 0,
+            'tiposConta': [conta.tipo_conta for conta in contas]
+        }
     finally:
         db.close()

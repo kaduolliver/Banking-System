@@ -1,45 +1,101 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useAuth } from '../../../../context/authContext';
 
 const tiposConta = ['poupanca', 'corrente', 'investimento'];
 
-export default function ClientAccountData({ dadosConta }) {
-    const [tipoSelecionado, setTipoSelecionado] = useState('poupanca');
+export default function ClientAccountInfo() {
+    const { usuario } = useAuth();
 
-    if (!dadosConta) return <div className="text-red-400">Conta não encontrada.</div>;
+    const getPrimeiraContaDisponivel = () => {
+        const tipoDisponivel = tiposConta.find(tipo => {
+            const conta = usuario?.contas?.find(c => c.tipo === tipo);
+            return conta && conta.dados_especificos;
+        });
+        return tipoDisponivel ?? 'corrente'; // fallback de segurança
+    };
 
-    const { agencia, numero, contas } = dadosConta;
+    const [tipoSelecionado, setTipoSelecionado] = useState(getPrimeiraContaDisponivel);
+
+
+    if (!usuario) return <div className="text-red-400">Usuário não autenticado.</div>;
+    if (!usuario.contas || usuario.contas.length === 0) {
+        return <div className="text-xl font-semibold mt-6 text-center text-red-500">Nenhuma conta encontrada.
+            <p>Reinicie a página (F5)</p></div>;
+    }
+
+    const contaCorrente = usuario.contas.find(c => c.tipo === 'corrente') || usuario.contas[0];
+    const contaSelecionada = usuario.contas.find(c => c.tipo === tipoSelecionado) ?? {};
+    const agencia = contaCorrente?.agencia ?? '—';
+    const numero = contaCorrente?.numero_conta ?? '—';
+    const saldo = contaSelecionada.saldo;
+    const status = contaSelecionada.status;
+    const dataAbertura = contaSelecionada.data_abertura;
+    console.log(usuario);
+    const contas = {
+        poupanca: usuario.contas.find(c => c.tipo === 'poupanca')?.dados_especificos ?? null,
+        corrente: usuario.contas.find(c => c.tipo === 'corrente')?.dados_especificos ?? null,
+        investimento: usuario.contas.find(c => c.tipo === 'investimento')?.dados_especificos ?? null,
+    };
 
     return (
         <div className="flex justify-center mt-6">
             <div className="w-full max-w-3xl space-y-6">
-                <h2 className="text-2xl font-semibold text-white border-b border-zinc-700 pb-2">Dados da Conta</h2>
+                <Tabs.Root value={tipoSelecionado}
+                    onValueChange={(novoTipo) => {
+                        if (contas[novoTipo]) {
+                            setTipoSelecionado(novoTipo);
+                        }
+                    }}>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <InfoItem label="Agência" value={agencia} />
-                    <InfoItem label="Número da Conta" value={numero} />
-                </div>
+                    {/* Cabeçalho e botões */}
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-semibold text-white">Dados da Conta</h2>
+                        <Tabs.List className="flex space-x-2">
+                            {tiposConta.map(tipo => {
+                                const contaExiste = contas[tipo] !== null;
+                                const isAtivo = tipoSelecionado === tipo;
 
-                <Tabs.Root value={tipoSelecionado} onValueChange={setTipoSelecionado}>
-                    <Tabs.List className="flex space-x-4 mt-6">
-                        {tiposConta.map(tipo => (
-                            <Tabs.Trigger
-                                key={tipo}
-                                value={tipo}
-                                className={`px-4 py-1 rounded font-medium ${
-                                    tipoSelecionado === tipo
-                                        ? 'bg-amber-700 text-white cursor-default'
-                                        : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
-                                }`}
-                                disabled={tipoSelecionado === tipo}
-                            >
-                                {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-                            </Tabs.Trigger>
-                        ))}
-                    </Tabs.List>
+                                return (
+                                    <Tabs.Trigger
+                                        key={tipo}
+                                        value={tipo}
+                                        onMouseDown={e => {
+                                            if (!contaExiste || isAtivo) e.preventDefault();
+                                        }}
+                                        className={`px-4 py-1 rounded font-medium ${isAtivo
+                                            ? 'bg-amber-700 text-white cursor-default'
+                                            : contaExiste
+                                                ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                                : 'bg-zinc-900 text-zinc-600 cursor-not-allowed'
+                                            }`}
+                                        aria-disabled={!contaExiste || isAtivo}
+                                    >
+                                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                                    </Tabs.Trigger>
+                                );
+                            })}
+                        </Tabs.List>
+                    </div>
 
-                    <div className="relative mt-6">
+                    {/* Linha divisória */}
+                    <div className="border-b border-zinc-700 my-2" />
+
+                    {/* Agência e número da conta */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <InfoItem label="Agência" value={agencia} />
+                        <InfoItem label="Número da Conta" value={formatNumeroConta(numero)} />
+                        <InfoItem label="Saldo" value={formatMoeda(saldo)} />
+                        <InfoItem label="Status" value={capitalize(status) ?? '—'} classNameValue="text-green-500" />
+                        <InfoItem label="Data da Abertura" value={formatData(dataAbertura)} />
+                    </div>
+
+                    {/* Outra linha divisória */}
+                    <div className="border-b border-zinc-700 my-4" />
+
+                    {/* Conteúdo dinâmico das abas */}
+                    <div className="relative mt-2">
                         <Tabs.Content value="poupanca" asChild>
                             <motion.div
                                 key="poupanca"
@@ -87,14 +143,17 @@ export default function ClientAccountData({ dadosConta }) {
     );
 }
 
-function InfoItem({ label, value }) {
+function InfoItem({ label, value, classNameValue }) {
     return (
         <div className="space-y-1">
             <div className="text-sm text-zinc-400">{label}</div>
-            <div className="text-base text-white font-medium">{value ?? '—'}</div>
+            <div className={`text-base font-medium ${classNameValue ?? 'text-white'}`}>
+                {value ?? '—'}
+            </div>
         </div>
     );
 }
+
 
 function formatMoeda(valor) {
     if (valor == null) return '—';
@@ -114,4 +173,9 @@ function formatData(data) {
 function capitalize(texto) {
     if (!texto) return '—';
     return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+}
+
+function formatNumeroConta(numero) {
+    if (!numero || numero.length < 2) return numero ?? '—';
+    return numero.slice(0, -1) + '-' + numero.slice(-1);
 }
