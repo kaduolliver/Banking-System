@@ -5,6 +5,7 @@ import ClientAccountInfo from './AccountPanelComponents/ClientAccountInfo';
 import { useAuth } from '../../../context/authContext';
 import { verificarConta } from '../../../services/cliente/contaService';
 import { verificarSessao } from '../../../services/auth/loginService';
+import FadeBlurTransition from '../../EffectsComponents/FadeBlurTransition';
 
 export default function ClientAccountPanel() {
   const { usuario, carregando, setUsuario } = useAuth();
@@ -46,19 +47,27 @@ export default function ClientAccountPanel() {
     return <p className="text-center text-gray-500">Carregando informações...</p>;
   }
 
-  return (
-    <div>
-      {!enderecoSalvo && (
+  const viewId = !enderecoSalvo ? 'address' : temConta ? 'info' : 'request';
+
+  const renderView = () => {
+    if (!enderecoSalvo) {
+      return (
         <ClientAddressForm onEnderecoSalvo={() => setEnderecoSalvo(true)} />
-      )}
+      );
+    }
 
-      {enderecoSalvo && temConta && (
-        <ClientAccountInfo tiposConta={tiposConta} />
-      )}
+    if (temConta) {
+      return <ClientAccountInfo tiposConta={tiposConta} />;
+    }
 
-      {enderecoSalvo && !temConta && (
-        <AccountRequest onSolicitacaoConcluida={handleSolicitacaoConcluida} />
-      )}
+    return (
+      <AccountRequest onSolicitacaoConcluida={handleSolicitacaoConcluida} />
+    );
+  };
+
+  return (
+    <div className="relative min-h-[420px]">
+      <FadeBlurTransition id={viewId}>{renderView()}</FadeBlurTransition>
     </div>
   );
 }

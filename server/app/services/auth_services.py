@@ -72,7 +72,8 @@ def registrar_usuario(data):
                 codigo_funcionario=codigo_gerado,
                 cargo="Estagiário", 
                 id_supervisor=None,
-                id_agencia=id_agencia
+                id_agencia=id_agencia,
+                nivel_hierarquico=1,
             ))
 
         db.commit()
@@ -145,6 +146,8 @@ def validar_otp(data):
         usuario = db.query(Usuario).options(
             joinedload(Usuario.funcionario).joinedload(Funcionario.agencia),
             joinedload(Usuario.cliente)
+                .joinedload(Cliente.emprestimos), 
+            joinedload(Usuario.cliente)
                 .joinedload(Cliente.contas)
                 .joinedload(Conta.agencia),
             joinedload(Usuario.cliente)
@@ -204,6 +207,8 @@ def verificar_sessao():
     try:
         usuario = db.query(Usuario).options(
             joinedload(Usuario.funcionario).joinedload(Funcionario.agencia),
+            joinedload(Usuario.cliente)
+                .joinedload(Cliente.emprestimos), 
             joinedload(Usuario.cliente)
                 .joinedload(Cliente.contas)
                 .joinedload(Conta.agencia)

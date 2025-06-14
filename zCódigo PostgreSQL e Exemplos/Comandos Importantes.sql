@@ -1,9 +1,13 @@
--- Resetar banco de dados
+-- Resetar tabelas do banco de dados
 
 TRUNCATE TABLE conta_poupanca, conta_corrente, conta_investimento, transacao, emprestimo,
                relatorio, solicitacao_conta, auditoria, conta, agencia, endereco,
                funcionario, cliente, usuario RESTART IDENTITY;
 
+
+-- Resetar database COMPLETA
+DROP DATABASE seu_nome_do_banco_de_dados;
+CREATE DATABASE seu_nome_do_banco_de_dados;
 
 -- Mudar tipo_usuario 
 
@@ -15,7 +19,7 @@ WHERE id_usuario = (SELECT id_usuario FROM usuario WHERE cpf = '44444444444'); -
 
 -- 2. Inserir o usuário na tabela cliente
 INSERT INTO cliente (id_usuario, score_credito)
-VALUES ((SELECT id_usuario FROM usuario WHERE cpf = '44444444444'), 0); -- Substitua pelo CPF real e score inicial
+VALUES ((SELECT id_usuario FROM usuario WHERE cpf = '44444444444'), 50); -- Substitua pelo CPF real e score inicial
 
 -- 3. Atualizar o tipo_usuario na tabela usuario
 UPDATE usuario
@@ -24,31 +28,9 @@ WHERE cpf = '44444444444'; -- Substitua pelo CPF real
 
 COMMIT;
 
--- Inserir hierarquia
 
--- Admin
+-- Mudar score_credito do cliente
 
-UPDATE funcionario
-SET codigo_funcionario = 'ADM001',
-    cargo = 'Admin',
-    nivel_hierarquico = 3,
-    id_supervisor = NULL -- NULL porque admin não tem supervisor
-WHERE id_usuario = 1; -- quem será o admin
-
--- Gerente
-
-UPDATE funcionario
-SET codigo_funcionario = 'GER001',
-    cargo = 'Gerente',
-    nivel_hierarquico = 2,
-    id_supervisor = 1 -- id_usuario do supervisor [Admin]
-WHERE id_usuario = 2; -- quem será o gerente
-
--- Estagiário
-
-UPDATE funcionario
-SET codigo_funcionario = 'EST001',
-    cargo = 'Estagiário',
-    nivel_hierarquico = 1,
-    id_supervisor = 2 -- id_usuario do supervisor [Gerente]
-WHERE id_usuario = 3; -- quem será o estagiário
+UPDATE cliente
+SET score_credito = 95 -- Determine o score aqui. Emprestimo -> if score_credito >= 80 else "REJEITADO"
+WHERE id_cliente = 1; -- Substitua 1 pelo id_cliente do cliente

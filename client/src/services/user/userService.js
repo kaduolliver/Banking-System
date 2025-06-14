@@ -38,7 +38,7 @@ export async function enviarEndereco(dadosEndereco) {
     console.log(data.mensagem);
     return data;
   } catch (error) {
-    console.error('Erro ao enviar endereço:', error.message);
+    console.error('Erro ao enviar endereÃ§o:', error.message);
     throw error;
   }
 }
@@ -58,7 +58,7 @@ export async function buscarEndereco() {
     return data;
     
   } catch (error) {
-    console.error('Erro ao buscar endereço:', error.message);
+    console.error('Erro ao buscar endereÃ§o:', error.message);
     throw error;
   }
 }
@@ -69,7 +69,7 @@ export async function buscarEndereco() {
 //   });
 
 //   if (!response.ok) {
-//     throw new Error("Erro ao buscar dados atualizados do usuário");
+//     throw new Error("Erro ao buscar dados atualizados do usuï¿½rio");
 //   }
 
 //   return await response.json();

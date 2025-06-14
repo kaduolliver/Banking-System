@@ -53,7 +53,7 @@ export default function ManagerConfig() {
   }
 
   return (
-    <div className="p-6 shadow-lg h-full flex flex-col">
+    <div className="p-6 shadow-2xl h-full flex flex-col">
       <h2 className="text-2xl font-bold text-white mb-6">Gerenciamento de Funcionários</h2>
 
       {employees.length === 0 ? (
@@ -69,7 +69,7 @@ export default function ManagerConfig() {
                 <th className="py-3 px-6 text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="text-zinc-300 text-sm font-light">
+            <tbody className="text-zinc-300 text-sm">
               {employees.map((employee) => (
                 <tr key={employee.id} className="border-b border-zinc-600 hover:bg-zinc-600">
                   <td className="py-3 px-6 text-left whitespace-nowrap">{employee.nome}</td>
@@ -78,10 +78,10 @@ export default function ManagerConfig() {
                   <td className="py-3 px-6 text-center">
                     <button
                       onClick={() => toggleStatus(employee.id)}
-                      className={`font-bold py-1 px-3 rounded text-xs transition-colors duration-200
+                      className={`font-bold py-1 rounded text-xs transition-colors duration-200
                         ${employee.inativo
-                          ? 'bg-red-600 hover:bg-red-700 text-white'
-                          : 'bg-green-600 hover:bg-green-700 text-white'
+                          ? 'bg-red-600 hover:bg-red-700 px-3 text-white'
+                          : 'bg-green-600 hover:bg-green-700 px-5 text-white'
                         }
                       `}
                     >

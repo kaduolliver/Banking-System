@@ -1,11 +1,11 @@
 import { useAuth } from '../../context/authContext';
 import ClientTabs from './ClientTabs';
-import ClientNavbar from './ClientNavBar';
+import ClientNavbar from './ClientNavbar';
 import ScreenOverlay from '../EffectsComponents/ScreenOverlay';
 import SplashScreen from '../EffectsComponents/SplashScreen';
+import BackgroundGrain from '../EffectsComponents/BackgroundGrain';
 
 export default function Client() {
-
   const { carregando } = useAuth();
 
   if (carregando) return <SplashScreen />;
@@ -15,9 +15,13 @@ export default function Client() {
       <ScreenOverlay />
       <ClientNavbar />
       <div
-        className="min-h-screen flex pt-40 pb-20 bg-black items-center justify-center bg-cover p-6"
-        style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}
+        className="min-h-screen flex pt-40 pb-20 items-center justify-center p-6 relative"
+        style={{
+          backgroundColor: "rgb(10, 10, 10)",
+          overflow: "hidden", 
+        }}
       >
+        <BackgroundGrain />
         <ClientTabs />
       </div>
     </>

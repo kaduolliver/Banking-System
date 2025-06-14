@@ -47,6 +47,14 @@ CREATE TABLE usuario (
 	otp_codigo VARCHAR(10) -- ++
 );
 
+-- Tabela agencia (atual)
+
+CREATE TABLE agencia (
+    id_agencia SERIAL PRIMARY KEY,
+    nome VARCHAR(255) NOT NULL,
+    codigo_agencia VARCHAR(50) UNIQUE NOT NULL
+); -- retirado a FK de endereco
+
 CREATE TABLE funcionario (
 	id_funcionario SERIAL PRIMARY KEY,
 	id_usuario INT UNIQUE NOT NULL,
@@ -64,41 +72,9 @@ CREATE TABLE funcionario (
 CREATE TABLE cliente (
 	id_cliente SERIAL PRIMARY KEY,
 	id_usuario INT UNIQUE NOT NULL,
-	score_credito NUMERIC(5, 2),
+	score_credito INT NOT NULL DEFAULT 50 CHECK (score_credito BETWEEN 0 AND 100),
 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
-
--- Tabela agencia (antiga)
-
--- CREATE TABLE agencia (
--- 	id_agencia SERIAL PRIMARY KEY,
--- 	nome VARCHAR(255) NOT NULL,
--- 	codigo_agencia VARCHAR(50) UNIQUE NOT NULL,
--- 	endereco_id INT UNIQUE NOT NULL,
--- 	FOREIGN KEY (endereco_id) REFERENCES endereco(id_endereco)
--- );
-
--- Tabela agencia (atual)
-
-CREATE TABLE agencia (
-    id_agencia SERIAL PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    codigo_agencia VARCHAR(50) UNIQUE NOT NULL
-); -- retirado a FK de endereco
-
--- Tabela endereco (antiga)
-
--- CREATE TABLE endereco (
--- 	id_endereco SERIAL PRIMARY KEY,
--- 	id_usuario INT NOT NULL,
--- 	cep VARCHAR(10) NOT NULL,
--- 	logradouro VARCHAR(255) NOT NULL,
--- 	numero_casa VARCHAR(255) NOT NULL,
--- 	bairro VARCHAR(100) NOT NULL,
--- 	estado CHAR(2) NOT NULL,
--- 	complemento VARCHAR(255),
--- 	FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
--- );
 
 -- Tabela endereco (atual)
 
@@ -238,54 +214,70 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Função empréstimo
+-- Função que deposita o valor do empréstimo na conta assim que o status é APROVADO
 CREATE OR REPLACE FUNCTION fn_depositar_emprestimo()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.status = 'APROVADO' AND OLD.status IS DISTINCT FROM 'APROVADO' THEN
-    INSERT INTO transacao (
-      id_conta_origem, tipo_transacao, valor, data_hora, descricao
-    ) VALUES (
-      NEW.id_conta, 'deposito', NEW.valor_solicitado, CURRENT_TIMESTAMP,
-      CONCAT('Empréstimo ID ', NEW.id_emprestimo)
-    );
-  END IF;
-  RETURN NEW;
+    IF NEW.status = 'APROVADO'
+       AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'APROVADO') THEN
+
+        INSERT INTO transacao (
+            id_conta_origem,
+            tipo_transacao,
+            valor,
+            data_hora,
+            descricao
+        ) VALUES (
+            NEW.id_conta,
+            'deposito',
+            NEW.valor_solicitado,
+            CURRENT_TIMESTAMP,
+            CONCAT('Empréstimo ID ', NEW.id_emprestimo)
+        );
+    END IF;
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Função criar conta após aprovação (antigo)
--- CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
--- RETURNS TRIGGER AS $$
--- DECLARE
---   v_numero_conta VARCHAR(20);
---   v_id_agencia INTEGER;
--- BEGIN
---   IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
---     -- Gerar número da conta
---     v_numero_conta := 'AC' || TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
 
---     -- Buscar dinamicamente o ID da agência com código '001'
---     SELECT id_agencia INTO v_id_agencia
---     FROM agencia
---     WHERE codigo = '001'
---     LIMIT 1;
+-- Função para atualizar o saldo depois de depositar/sacar/transferir (emprestimo)
+CREATE OR REPLACE FUNCTION fn_atualizar_saldo_conta()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Verifica saldo suficiente para saque ou transferência
+  IF NEW.tipo_transacao IN ('saque', 'transferencia') THEN
+    IF (SELECT saldo FROM conta WHERE id_conta = NEW.id_conta_origem) < NEW.valor THEN
+      RAISE EXCEPTION 'Saldo insuficiente na conta de origem.';
+    END IF;
+  END IF;
 
---     -- Verificar se a agência foi encontrada
---     IF v_id_agencia IS NULL THEN
---       RAISE EXCEPTION 'Agência com código 001 não encontrada. Verifique se ela foi cadastrada.';
---     END IF;
+  -- DEPÓSITO
+  IF NEW.tipo_transacao = 'deposito' THEN
+    UPDATE conta
+    SET saldo = saldo + NEW.valor
+    WHERE id_conta = NEW.id_conta_origem;
 
---     -- Inserir conta vinculada à agência encontrada
---     INSERT INTO conta (
---       numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
---     ) VALUES (
---       v_numero_conta, v_id_agencia, 0.00, NEW.tipo_conta, NEW.id_cliente, CURRENT_DATE, 'ativa'
---     );
---   END IF;
---   RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
+  -- SAQUE
+  ELSIF NEW.tipo_transacao = 'saque' THEN
+    UPDATE conta
+    SET saldo = saldo - NEW.valor
+    WHERE id_conta = NEW.id_conta_origem;
+
+  -- TRANSFERÊNCIA
+  ELSIF NEW.tipo_transacao = 'transferencia' THEN
+    UPDATE conta
+    SET saldo = saldo - NEW.valor
+    WHERE id_conta = NEW.id_conta_origem;
+
+    UPDATE conta
+    SET saldo = saldo + NEW.valor
+    WHERE id_conta = NEW.id_conta_destino;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Função criar conta apos aprovação (novo/atual)
 CREATE OR REPLACE FUNCTION fn_criar_conta_apos_aprovacao()
@@ -353,7 +345,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 -- ++ Função de limites de funcionarios por agencia
 CREATE OR REPLACE FUNCTION fn_verificar_limite_funcionarios_agencia()
 RETURNS TRIGGER AS $$
@@ -412,13 +403,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-
 -- Trigger para empréstimo
 CREATE TRIGGER depositar_emprestimo
-AFTER UPDATE ON emprestimo
+AFTER INSERT OR UPDATE ON emprestimo
 FOR EACH ROW
 EXECUTE FUNCTION fn_depositar_emprestimo();
+
+-- Trigger para atualizar saldo
+CREATE TRIGGER tg_atualizar_saldo_conta
+BEFORE INSERT ON transacao
+FOR EACH ROW
+EXECUTE FUNCTION fn_atualizar_saldo_conta();
 
 -- Trigger para criar conta
 CREATE TRIGGER trg_criar_conta_apos_aprovacao
@@ -448,7 +443,6 @@ WHEN (
 )
 EXECUTE FUNCTION gerar_codigo_funcionario();
 
-
 -- View empréstimos ativos
 CREATE OR REPLACE VIEW vw_emprestimos_ativos AS
 SELECT
@@ -465,50 +459,102 @@ WHERE e.status = 'APROVADO';
 
 -- Procedure processar_emprestimo
 CREATE OR REPLACE PROCEDURE processar_emprestimo(
-	IN p_id_cliente INT,
-	IN p_id_conta INT,
-	IN p_valor NUMERIC(15, 2),
-	IN p_prazo INT,
-	IN p_finalidade VARCHAR(50),
-	IN p_score_risco NUMERIC(5, 2),
-	IN p_aprovado BOOLEAN
+    IN p_id_cliente     INT,
+    IN p_id_conta       INT,
+    IN p_valor          NUMERIC(15,2),
+    IN p_prazo          INT,
+    IN p_finalidade     VARCHAR(50),
+    IN p_score_risco    NUMERIC(5,2)
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-	v_taxa NUMERIC(5, 2);
-	v_valor_total NUMERIC(15, 2);
-	v_id_emprestimo INT;
+    v_status          VARCHAR(20) := 'PENDENTE';      
+    v_taxa            NUMERIC(5,2) := 0;
+    v_valor_total     NUMERIC(15,2) := p_valor;
 BEGIN
-	INSERT INTO emprestimo (
-		id_cliente, id_conta, valor_solicitado, prazo_meses, score_risco, status, finalidade
-	) VALUES (
-		p_id_cliente, p_id_conta, p_valor, p_prazo, p_score_risco, 'PENDENTE', p_finalidade
-	)
-	RETURNING id_emprestimo INTO v_id_emprestimo;
+    -- Aprovação automática apenas se score for MUITO alto (exemplo ≥ 80)
+    IF p_score_risco >= 80 THEN
+        v_status := 'APROVADO';
+        v_taxa   := 0.5;                               -- calcule como quiser
+        v_valor_total := p_valor * POWER(1 + v_taxa/100, p_prazo);
 
-	IF p_aprovado THEN
-		v_taxa := CASE
-			WHEN p_score_risco <= 20 THEN 0.5
-			WHEN p_score_risco <= 40 THEN 1.0
-			WHEN p_score_risco <= 60 THEN 2.0
-			WHEN p_score_risco <= 80 THEN 3.5
-			ELSE 5.0
-		END;
-		v_valor_total := p_valor * POWER(1 + v_taxa / 100, p_prazo);
-		UPDATE emprestimo
-		SET status = 'APROVADO',
-			taxa_juros_mensal = v_taxa,
-			valor_total = v_valor_total,
-			data_aprovacao = CURRENT_TIMESTAMP
-		WHERE id_emprestimo = v_id_emprestimo;
-	ELSE
-		UPDATE emprestimo
-		SET status = 'REJEITADO'
-		WHERE id_emprestimo = v_id_emprestimo;
-	END IF;
+		-- Rejeição automática
+    ELSIF p_score_risco < 40 THEN
+        v_status := 'REJEITADO';
+    END IF;
+
+    INSERT INTO emprestimo (
+        id_cliente, id_conta, valor_solicitado, prazo_meses, score_risco,
+        status, finalidade, taxa_juros_mensal, valor_total, data_aprovacao
+    ) VALUES (
+        p_id_cliente, p_id_conta, p_valor, p_prazo, p_score_risco,
+        v_status, p_finalidade, v_taxa, v_valor_total,
+        CASE WHEN v_status IN ('APROVADO', 'REJEITADO') THEN CURRENT_TIMESTAMP ELSE NULL END
+    );
 END;
 $$;
+
+-- Procedure para aprovar emprestimo
+CREATE OR REPLACE PROCEDURE decidir_emprestimo(
+    IN p_id_emprestimo INT,
+    IN p_aprovado      BOOLEAN,
+    IN p_id_funcionario INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_score       NUMERIC(5,2);
+    v_taxa        NUMERIC(5,2) := 0;
+    v_valor       NUMERIC(15,2);
+    v_valor_total NUMERIC(15,2);
+    v_prazo       INT;
+BEGIN
+    IF p_aprovado THEN
+        -- Busca dados do empréstimo
+        SELECT score_risco, valor_solicitado, prazo_meses
+        INTO v_score, v_valor, v_prazo
+        FROM emprestimo
+        WHERE id_emprestimo = p_id_emprestimo;
+
+        -- Define taxa baseada no score
+        v_taxa := CASE
+                    WHEN v_score >= 80 THEN 0.5
+                    WHEN v_score >= 60 THEN 1.0
+                    WHEN v_score >= 40 THEN 2.0
+                    ELSE 3.0
+                  END;
+
+        -- Calcula valor total com juros compostos mensais
+        v_valor_total := v_valor * POWER(1 + v_taxa / 100, v_prazo);
+
+        -- Atualiza empréstimo
+        UPDATE emprestimo
+        SET status              = 'APROVADO',
+            data_aprovacao      = CURRENT_TIMESTAMP,
+            taxa_juros_mensal   = v_taxa,
+            valor_total         = v_valor_total
+        WHERE id_emprestimo = p_id_emprestimo
+          AND status = 'PENDENTE';
+
+    ELSE
+        UPDATE emprestimo
+        SET status         = 'REJEITADO',
+            data_aprovacao = CURRENT_TIMESTAMP
+        WHERE id_emprestimo = p_id_emprestimo
+          AND status = 'PENDENTE';
+    END IF;
+
+    -- Auditoria
+    PERFORM fn_registrar_auditoria(
+        p_id_funcionario,
+        'DECISAO EMPRESTIMO',
+        CONCAT('Empréstimo ', p_id_emprestimo, ' => ',
+               CASE WHEN p_aprovado THEN 'APROVADO' ELSE 'REJEITADO' END)
+    );
+END;
+$$;
+
 
 CREATE INDEX idx_emprestimo_cliente_data ON emprestimo (id_cliente, data_solicitacao);
 CREATE INDEX idx_transacao_conta_data ON transacao(id_conta_origem, data_hora DESC);
@@ -516,3 +562,7 @@ CREATE INDEX idx_emprestimo_aprovado ON emprestimo (id_cliente, data_solicitacao
 
 CREATE UNIQUE INDEX idx_usuario_cpf ON usuario(cpf);
 CREATE UNIQUE INDEX idx_conta_numero ON conta(numero_conta);
+
+CREATE INDEX idx_emprestimo_status ON emprestimo(status);
+CREATE INDEX idx_solicitacao_conta_status ON solicitacao_conta(status);
+CREATE INDEX idx_funcionario_id_agencia ON funcionario(id_agencia);

@@ -35,7 +35,7 @@ export function useAdmData() {
                     setNovoEndereco(enderecoFormatado);
                 }
             } catch (e) {
-                console.error("Erro ao buscar endereÁo:", e);
+                console.error("Erro ao buscar endere√ßo:", e);
             } finally {
                 setCarregandoEndereco(false);
             }
@@ -48,7 +48,7 @@ export function useAdmData() {
         const telefoneLimpo = telefone.replace(/\D/g, '');
 
         if (!validarTelefone(telefone)) {
-            setErro('Telefone inv·lido. Formato esperado: (XX) XXXXX-XXXX');
+            setErro('Telefone inv√°lido. Formato esperado: (XX) XXXXX-XXXX');
             return;
         }
 
@@ -78,7 +78,7 @@ export function useAdmData() {
             setEndereco({ ...enderecoLimpo, cep: formatCEP(enderecoLimpo.cep) });
             setEditandoEndereco(false);
         } catch (e) {
-            setErro("Erro ao atualizar endereÁo.");
+            setErro("Erro ao atualizar endere√ßo.");
             console.error(e);
         } finally {
             setLoadingTelefone(false);

@@ -55,11 +55,11 @@ const ClientNavbar = () => {
               Olá, {usuario?.nome ? usuario.nome.split(' ').slice(0, 2).join(' ') : 'usuário'}
             </a>
 
-            <Link to="/creditcard" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400">
+            {/* <Link to="/creditcard" className="group flex relative font-bold gap-2 text-white transition hover:text-amber-400">
               <CreditCard className="relative top-1"/>
               <span className="relative top-1">Cartão</span>
               <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
-            </Link>
+            </Link> */}
 
             <Link to={perfilLink} className="group relative flex items-center gap-2 top-1 text-white font-bold transition hover:text-amber-400">
               <User className="relative bottom-1" />

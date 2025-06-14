@@ -2,6 +2,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useAuth } from '../../../../context/authContext';
+import { corDoScore } from '../../../../utils/formatters'
 
 const tiposConta = ['poupanca', 'corrente', 'investimento'];
 
@@ -32,7 +33,7 @@ export default function ClientAccountInfo() {
     const saldo = contaSelecionada.saldo;
     const status = contaSelecionada.status;
     const dataAbertura = contaSelecionada.data_abertura;
-    console.log(usuario);
+    const score = usuario.score_credito;
     const contas = {
         poupanca: usuario.contas.find(c => c.tipo === 'poupanca')?.dados_especificos ?? null,
         corrente: usuario.contas.find(c => c.tipo === 'corrente')?.dados_especificos ?? null,
@@ -89,6 +90,7 @@ export default function ClientAccountInfo() {
                         <InfoItem label="Saldo" value={formatMoeda(saldo)} />
                         <InfoItem label="Status" value={capitalize(status) ?? '—'} classNameValue="text-green-500" />
                         <InfoItem label="Data da Abertura" value={formatData(dataAbertura)} />
+                        <InfoItem label="Score" value={score ?? '—'} classNameValue={corDoScore(score)}/>
                     </div>
 
                     {/* Outra linha divisória */}

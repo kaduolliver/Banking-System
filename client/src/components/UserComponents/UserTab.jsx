@@ -1,9 +1,8 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { motion, AnimatePresence } from 'framer-motion';
+import FadeBlurTransition from '../EffectsComponents/FadeBlurTransition';
 
 export default function UserTabs({ tabs, activeTab, setActiveTab }) {
-  
-  const active = tabs.find(tab => tab.value === activeTab);
+  const active = tabs.find((tab) => tab.value === activeTab);
 
   return (
     <Tabs.Root
@@ -12,6 +11,7 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
       className="flex w-full max-w-5xl h-[700px] bg-zinc-900 rounded-xl shadow-xl overflow-hidden"
       orientation="vertical"
     >
+      {/* Lista de abas */}
       <Tabs.List className="flex flex-col w-52 bg-zinc-800 p-4 space-y-2">
         {tabs.map(({ value, label, icon: Icon }) => (
           <Tabs.Trigger
@@ -26,23 +26,15 @@ export default function UserTabs({ tabs, activeTab, setActiveTab }) {
         ))}
       </Tabs.List>
 
+      {/* Conteúdo da aba ativa */}
       <div className="flex-1 p-6 relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {active && (
-            <Tabs.Content key={active.value} value={active.value} asChild forceMount>
-              <motion.div
-                key={active.value}
-                initial={{ opacity: 0, filter: 'blur(10px)' }}
-                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(10px)' }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                className="absolute inset-0 overflow-y-auto pr-2"
-              >
-                <div className="text-white text-base">{active.content}</div>
-              </motion.div>
-            </Tabs.Content>
-          )}
-        </AnimatePresence>
+        {active && (
+          <Tabs.Content key={active.value} value={active.value} asChild forceMount>
+            <FadeBlurTransition id={active.value} className="absolute inset-0 overflow-y-auto pr-2">
+              <div className="text-white text-base">{active.content}</div>
+            </FadeBlurTransition>
+          </Tabs.Content>
+        )}
       </div>
     </Tabs.Root>
   );

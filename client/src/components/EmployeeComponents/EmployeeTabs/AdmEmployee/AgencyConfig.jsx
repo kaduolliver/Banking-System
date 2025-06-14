@@ -28,7 +28,7 @@ export default function AgencyConfig() {
 
 
                 {/* Componente de endereço */}
-                {usuario && <AgencyAddressForm onEnderecoSalvo={handleEnderecoSalvo} />}
+                {usuario && <AgencyAddressForm onEnderecoSalvo={handleEnderecoSalvo} enderecoExterno={enderecoSalvo} />}
 
                 {/* Exibir algo quando o endereço for salvo */}
                 {enderecoSalvo && (

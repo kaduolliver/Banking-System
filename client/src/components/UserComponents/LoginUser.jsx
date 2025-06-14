@@ -47,6 +47,8 @@ export default function LoginAndRegister() {
       endereco_agencia: resposta.endereco_agencia || null,
       contas: resposta.contas || [],
       solicitacoes_conta: resposta.solicitacoes_conta,
+      emprestimos: resposta.emprestimos || [],
+      score_credito: resposta.score_credito,
     });
 
     localStorage.setItem('usuarioId', resposta.id_usuario);

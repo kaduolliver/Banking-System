@@ -3,6 +3,7 @@ import EmployeeNavbar from "./EmpNavBar";
 import EmployeeTabs from "./EmployeeTabs";
 import ScreenOverlay from "../EffectsComponents/ScreenOverlay";
 import SplashScreen from "../EffectsComponents/SplashScreen";
+import BackgroundGrain from "../EffectsComponents/BackgroundGrain";
 
 export default function Employee() {
 
@@ -14,8 +15,14 @@ export default function Employee() {
     <>
       <ScreenOverlay />
       <EmployeeNavbar />
-      <div className="min-h-screen flex pt-40 pb-20 bg-black items-center justify-center bg-cover p-6"
-        style={{ backgroundImage: "url('/images/bitcoin-bg-user.png')" }}>
+      <div
+              className="min-h-screen flex pt-40 pb-20 items-center justify-center p-6 relative"
+              style={{
+                backgroundColor: "rgb(10, 10, 10)",
+                overflow: "hidden", 
+              }}
+            >
+              <BackgroundGrain />
         <EmployeeTabs />
       </div>
     </>

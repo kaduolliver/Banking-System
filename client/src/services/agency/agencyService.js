@@ -32,7 +32,7 @@ export async function cadastrarEnderecoAgencia(agenciaId, dadosEndereco) {
             throw new Error(data.erro || 'Erro desconhecido ao cadastrar endereço');
         }
 
-        return data.endereco;
+        return data.endereco ?? data;
     } catch (error) {
         console.error('Erro ao cadastrar endereço da agência:', error.message);
         throw error;
@@ -63,7 +63,7 @@ export async function atualizarEnderecoAgencia(agenciaId, dadosEndereco) {
             return data[0];
         }
 
-        return data.endereco;
+        return data.endereco ?? data;
     } catch (error) {
         console.error('Erro ao atualizar endereço da agência:', error.message);
         throw error;

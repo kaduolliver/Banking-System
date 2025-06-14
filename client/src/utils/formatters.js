@@ -35,9 +35,48 @@ export function validarTelefone(telefone) {
 }
 
 export function formatCEP(cep) {
-    return cep
-        .replace(/\D/g, '')         // Remove tudo que não é dígito
-        .replace(/^(\d{5})(\d)/, '$1-$2') // Adiciona o traço depois do 5º dígito
-        .slice(0, 9);               // Limita a 9 caracteres
+  if (!cep) return '';
+  return cep
+    .replace(/\D/g, '')
+    .replace(/^(\d{5})(\d)/, '$1-$2')
+    .slice(0, 9);
 }
 
+export function formatarMoeda(valor) {
+  if (valor === "" || valor === null || valor === undefined) return "";
+
+  const valorApenasNumeros = valor.toString().replace(/[^\d]/g, "");
+
+  const numeroCentavos = parseInt(valorApenasNumeros, 10);
+
+  if (isNaN(numeroCentavos)) return "";
+
+  const numeroReais = numeroCentavos / 100;
+
+  return numeroReais.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  });
+}
+
+export function desformatarMoeda(valorFormatado) {
+  if (!valorFormatado) return "";
+
+  const apenasNumeros = valorFormatado.replace(/[^\d,]/g, "");
+
+  const valorComPonto = apenasNumeros.replace(/,/g, ".");
+
+  const valorFloat = parseFloat(valorComPonto);
+
+  if (isNaN(valorFloat)) return "";
+
+  return valorFloat;
+}
+
+export function corDoScore(valor) {
+  if (valor == null) return 'text-white';            
+  if (valor <= 39) return 'text-red-500';            
+  if (valor <= 79) return 'text-yellow-400';         
+  return 'text-green-500';                           
+}

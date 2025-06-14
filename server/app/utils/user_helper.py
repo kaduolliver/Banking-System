@@ -13,7 +13,10 @@ def montar_dados_usuario(usuario):
     endereco = None
     status_endereco = None
     inativo = None
+    score_credito = None
     contas = []
+    solicitacoes = None
+    emprestimos = []
 
     if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
         funcionario = usuario.funcionario
@@ -28,6 +31,9 @@ def montar_dados_usuario(usuario):
             endereco, status_endereco = get_endereco_agencia(id_agencia)
 
     elif usuario.tipo_usuario == 'cliente' and usuario.cliente:
+        # Contas
+        score_credito = usuario.cliente.score_credito
+
         for conta in usuario.cliente.contas:
             dados_conta = {
                 'id_conta': conta.id_conta,
@@ -68,6 +74,7 @@ def montar_dados_usuario(usuario):
 
             contas.append(dados_conta)
 
+        # Solicitações
         solicitacoes = []
         for s in usuario.cliente.solicitacoes_conta:
             solicitacoes.append({
@@ -79,25 +86,48 @@ def montar_dados_usuario(usuario):
                 'valor_inicial': float(s.valor_inicial),
                 'data_aprovacao': s.data_aprovacao.isoformat() if s.data_aprovacao else None
             })
+
+        # Empréstimos
+        for e in usuario.cliente.emprestimos:
+            emprestimos.append({
+                'id_emprestimo': e.id_emprestimo,
+                'valor_solicitado': float(e.valor_solicitado),
+                'taxa_juros_mensal': float(e.taxa_juros_mensal),
+                'prazo_meses': e.prazo_meses,
+                'valor_total': float(e.valor_total),
+                'status': e.status,
+                'data_solicitacao': e.data_solicitacao.isoformat(),
+                'data_aprovacao': e.data_aprovacao.isoformat() if e.data_aprovacao else None
+            })
+
     else:
         solicitacoes = None
 
     dados = {
+        # Campos de usuário
         'id_usuario': usuario.id_usuario,
         'tipo_usuario': usuario.tipo_usuario,
         'nome': usuario.nome,
         'cpf': usuario.cpf,
         'data_nascimento': usuario.data_nascimento.isoformat(),
         'telefone': usuario.telefone,
+
+        # Campos de funcionário
         'cargo': cargo,
         'id_funcionario': id_funcionario,
         'status_funcionario': inativo,
+
+        # Campos da agência (para funcionário)
         'id_agencia': id_agencia,
         'nome_agencia': nome_agencia,
         'codigo_agencia': codigo_agencia,
         'endereco_agencia': endereco if status_endereco == 200 else None,
+
+        # Campos de cliente
+        'score_credito': score_credito,                
         'contas': contas if contas else None,
-        'solicitacoes_conta': solicitacoes if solicitacoes else None
+        'solicitacoes_conta': solicitacoes or None,
+        'emprestimos': emprestimos or None,
     }
 
     return dados
