@@ -34,3 +34,9 @@ COMMIT;
 UPDATE cliente
 SET score_credito = 95 -- Determine o score aqui. Emprestimo -> if score_credito >= 80 else "REJEITADO"
 WHERE id_cliente = 1; -- Substitua 1 pelo id_cliente do cliente
+
+-- Mudar limite da conta corrente:
+
+UPDATE conta_corrente
+SET limite = 5000.00
+WHERE id_conta_corrente = 1;

@@ -17,7 +17,7 @@ class Emprestimo(Base):
     data_aprovacao = Column(TIMESTAMP)
     status = Column(String(20), nullable=False, default='PENDENTE')
     score_risco = Column(Numeric(5, 2))
-    finalidade = Column(String(50), nullable=False) 
+    finalidade = Column(String(100), nullable=False) 
 
     cliente = relationship("Cliente", back_populates="emprestimos")
     conta = relationship("Conta", back_populates="emprestimos")

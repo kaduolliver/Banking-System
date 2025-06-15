@@ -43,13 +43,20 @@ export function formatCEP(cep) {
 }
 
 export function formatarMoeda(valor) {
-  if (valor === "" || valor === null || valor === undefined) return "";
-
+  // Se o valor de entrada é realmente vazio, null ou undefined,
+  // ou se após a limpeza de não-dígitos resulta em algo que não é número (e não é zero),
+  // podemos retornar uma string vazia para limpar o campo.
+  // Caso contrário, ele tentará formatar o '0' para 'R$ 0,00'.
   const valorApenasNumeros = valor.toString().replace(/[^\d]/g, "");
+  
+  if (valorApenasNumeros === "") {
+      return ""; // Campo fica vazio se nada significativo foi digitado
+  }
 
   const numeroCentavos = parseInt(valorApenasNumeros, 10);
 
-  if (isNaN(numeroCentavos)) return "";
+  // Se parseInt falhar (ex: string com apenas letras após replace), ainda retorna vazio
+  if (isNaN(numeroCentavos)) return ""; 
 
   const numeroReais = numeroCentavos / 100;
 
@@ -61,15 +68,28 @@ export function formatarMoeda(valor) {
 }
 
 export function desformatarMoeda(valorFormatado) {
-  if (!valorFormatado) return "";
+  // Se a entrada for vazia, null ou undefined, retorne 0 (número)
+  // Isso permite que formatarMoeda formate "0" para "R$ 0,00"
+  if (!valorFormatado) {
+    return 0; // Importante retornar o número 0 aqui
+  }
 
   const apenasNumeros = valorFormatado.replace(/[^\d,]/g, "");
+
+  // Se após remover caracteres a string estiver vazia, significa que não havia números válidos,
+  // então consideramos 0.
+  if (apenasNumeros === "") {
+    return 0; // Importante retornar o número 0 aqui
+  }
 
   const valorComPonto = apenasNumeros.replace(/,/g, ".");
 
   const valorFloat = parseFloat(valorComPonto);
 
-  if (isNaN(valorFloat)) return "";
+  // Se parseFloat resultar em NaN (ex: "."), retorne 0 para que o campo possa exibir "R$ 0,00"
+  if (isNaN(valorFloat)) {
+    return 0; // Importante retornar o número 0 aqui
+  }
 
   return valorFloat;
 }

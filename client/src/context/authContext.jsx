@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { verificarSessao, logoutUsuario } from '../services/auth/loginService';
+import { getMeuPerfil } from '../services/auth/profileService';
 
 const AuthContext = createContext();
 
@@ -24,7 +25,7 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
-    carregarSessao(); 
+    carregarSessao();
   }, []);
 
   const logout = async () => {
@@ -37,11 +38,23 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   };
 
-  const atualizarUsuario = (novosDados) => {
-    setUsuario((usuarioAnterior) => ({
-      ...usuarioAnterior,
-      ...novosDados
-    }));
+  const atualizarUsuario = async (novosDados) => {
+    if (novosDados) {
+      // --- atualização local: sempre crie objetos/arrays novos
+      return setUsuario(prev => ({
+        ...prev,
+        ...novosDados,
+        // se vier array de contas novo, garanta nova referência
+        contas: novosDados.contas ? [...novosDados.contas] : prev.contas,
+      }));
+    }
+
+    try {
+      const perfil = await getMeuPerfil();      // GET /api/me
+      setUsuario(perfil);                       // objeto fresco do backend
+    } catch (err) {
+      console.error('Erro ao buscar perfil:', err);
+    }
   };
 
   return (

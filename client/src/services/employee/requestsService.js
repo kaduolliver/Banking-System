@@ -1,3 +1,5 @@
+
+// Solicitações para abertura de conta
 export async function getSolicitacoesPendentes() {
   try {
     const res = await fetch('http://localhost:5000/api/solicitacoes/pendentes', {
@@ -25,8 +27,7 @@ export async function getSolicitacoesPendentes() {
   }
 }
 
-
-export async function aprovarSolicitacao(id) {
+export async function aprovarSolicitacaoConta(id) {
   try {
     const res = await fetch(`http://localhost:5000/api/solicitacoes/${id}/aprovar`, {
       method: 'POST',
@@ -40,7 +41,7 @@ export async function aprovarSolicitacao(id) {
   }
 }
 
-export async function rejeitarSolicitacao(id) {
+export async function rejeitarSolicitacaoConta(id) {
   try {
     const res = await fetch(`http://localhost:5000/api/solicitacoes/${id}/rejeitar`, {
       method: 'POST',
@@ -53,3 +54,46 @@ export async function rejeitarSolicitacao(id) {
     throw error;
   }
 }
+
+// ----------------------------------------------------------------------------------------
+
+
+// Requisições para solicitações de empréstimos manuais
+async function handleResponse(res) {
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    
+    const erroMsg = data?.erro || res.statusText;
+    throw new Error(erroMsg);
+  }
+  return data;
+}
+
+export async function getSolicitacoesEmprestimosPendentes() {
+  const res = await fetch(`http://localhost:5000/api/emprestimos/pendentes`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse(res);
+}
+
+async function decidirSolicitacaoEmprestimo(id, aprovado) {
+  const res = await fetch(`http://localhost:5000/api/emprestimos/${id}/decidir`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ aprovado }),
+  });
+  return handleResponse(res);
+}
+
+export function aprovarSolicitacaoEmprestimo(id) {
+  return decidirSolicitacaoEmprestimo(id, true);
+}
+
+export function rejeitarSolicitacaoEmprestimo(id) {
+  return decidirSolicitacaoEmprestimo(id, false);
+}
+
+// ----------------------------------------------------------------------------------------

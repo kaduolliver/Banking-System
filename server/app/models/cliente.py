@@ -7,7 +7,7 @@ class Cliente(Base):
 
     id_cliente = Column(Integer, primary_key=True)
     id_usuario = Column(Integer, ForeignKey('usuario.id_usuario'), unique=True, nullable=False)
-    score_credito = Column(Numeric(5, 2))
+    score_credito = Column(Numeric(5, 2), nullable=False, server_default="50.00")
 
     usuario = relationship("Usuario", back_populates="cliente", uselist=False)
     contas = relationship("Conta", back_populates="cliente")

@@ -52,7 +52,7 @@ def registrar_usuario(data):
         db.flush() 
 
         if tipo == 'cliente':
-            db.add(Cliente(id_usuario=novo_usuario.id_usuario, score_credito=0))
+            db.add(Cliente(id_usuario=novo_usuario.id_usuario))
         else: 
             
             id_agencia = data.get('id_agencia')
@@ -224,5 +224,39 @@ def verificar_sessao():
             'usuario': dados_usuario
         }, 200
 
+    finally:
+        db.close()
+        
+
+def obter_usuario_atual(id_usuario: int):
+    
+    db = SessionLocal()
+    try:
+        usuario = (
+            db.query(Usuario)
+              .options(
+                  joinedload(Usuario.funcionario).joinedload(Funcionario.agencia),
+                  joinedload(Usuario.cliente)
+                      .joinedload(Cliente.emprestimos),
+                  joinedload(Usuario.cliente)
+                      .joinedload(Cliente.contas)
+                      .joinedload(Conta.agencia),
+                  joinedload(Usuario.cliente)
+                      .joinedload(Cliente.contas)
+                      .joinedload(Conta.corrente),
+                  joinedload(Usuario.cliente)
+                      .joinedload(Cliente.contas)
+                      .joinedload(Conta.poupanca),
+                  joinedload(Usuario.cliente)
+                      .joinedload(Cliente.contas)
+                      .joinedload(Conta.investimento),
+              )
+              .filter_by(id_usuario=id_usuario)
+              .first()
+        )
+        if not usuario:
+            raise LookupError("Usuário não encontrado")
+
+        return montar_dados_usuario(usuario)
     finally:
         db.close()

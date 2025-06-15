@@ -1,9 +1,14 @@
 from flask import session, request
 from app.services.employee_services.adm_config import listar_funcionarios, atualizar_status_funcionario
-from app.services.employee_services.solicitacao import (
+from app.services.employee_services.empRequest import (
     listar_solicitacoes_pendentes,
     aprovar_solicitacao,
     rejeitar_solicitacao
+)
+from flask import session, request
+from app.services.employee_services.empLoan import (
+    listar_emprestimos_pendentes,
+    decidir_emprestimo
 )
 
 def employee_listar_solicitacoes_pendentes():
@@ -63,5 +68,37 @@ def employee_atualizar_status(id_funcionario):
         return resultado, 200
     except ValueError as e:
         return {'erro': str(e)}, 404
+    except Exception as e:
+        return {'erro': str(e)}, 500
+
+
+def _verificar_permissao():
+    if not session.get('id_funcionario') or session.get('cargo') not in ['Admin', 'Gerente']:
+        return False
+    return True
+
+def employee_listar_emprestimos_pendentes():
+    if not _verificar_permissao():
+        return {'erro': 'Acesso negado.'}, 403
+
+    try:
+        dados = listar_emprestimos_pendentes()
+        return dados, 200
+    except Exception as e:
+        return {'erro': str(e)}, 500
+
+def employee_decidir_emprestimo(id_emprestimo, id_funcionario):
+    if not _verificar_permissao():
+        return {'erro': 'Acesso negado.'}, 403
+
+    dados = request.get_json() or {}
+    if 'aprovado' not in dados:
+        return {'erro': 'Campo "aprovado" é obrigatório.'}, 400
+
+    try:
+        resultado = decidir_emprestimo(id_emprestimo, bool(dados['aprovado']), id_funcionario)
+        return resultado, 200
+    except ValueError as e:
+        return {'erro': str(e)}, 400
     except Exception as e:
         return {'erro': str(e)}, 500

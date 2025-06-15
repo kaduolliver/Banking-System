@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from '../../../../context/authContext';
 import { solicitarEmprestimo } from '../../../../services/cliente/contaService';
 import { formatarMoeda, desformatarMoeda } from "../../../../utils/formatters";
+import { getMeuPerfil } from '../../../../services/auth/profileService';
 
 export default function FinancialRequest() {
-  const { usuario } = useAuth();
+  const { usuario, setUsuario } = useAuth();
   const contas = usuario?.contas || [];
   const emprestimos = usuario?.emprestimos || [];
 
-  // Estado do formulário
   const [valor, setValor] = useState("");
   const [prazo, setPrazo] = useState(12);
+  const [loading, setLoading] = useState(false);
   const [finalidade, setFinalidade] = useState("");
   const [contaSelecionada, setContaSelecionada] = useState(contas.length > 0 ? contas[0].id_conta : "");
-  const [enviouSolicitacao, setEnviouSolicitacao] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
 
@@ -23,31 +23,19 @@ export default function FinancialRequest() {
     }
   }, [contas, contaSelecionada]);
 
-  // Lógica para bloquear o formulário baseado no status do empréstimo mais recente
-  const ultimoEmprestimo = emprestimos.length > 0
-    ? emprestimos[emprestimos.length - 1] // assumindo que o último é o mais recente
-    : null;
-
-  // Função para validar se está bloqueado e o motivo
-  const getStatusBloqueio = () => {
-    if (enviouSolicitacao) return 'pendente';
-
-    if (!ultimoEmprestimo) return null;
-    const status = ultimoEmprestimo.status?.toUpperCase();
-
-    if (status === 'PENDENTE') {
-      return 'pendente';
+  useEffect(() => {
+    if (mensagem) {
+      const timer = setTimeout(() => setMensagem(""), 5000);
+      return () => clearTimeout(timer);
     }
-    if (status === 'REJEITADO') {
-      return 'rejeitado';
-    }
-    if (status === 'APROVADO') {
-      return 'aprovada';
-    }
+  }, [mensagem]);
+
+  const statusBloqueio = useMemo(() => {
+    if (emprestimos.some(e => e.status === 'PENDENTE')) return 'pendente';
+    if (emprestimos.some(e => e.status === 'APROVADO')) return 'aprovada';
+    if (emprestimos.some(e => e.status === 'REJEITADO')) return 'rejeitado';
     return null;
-  };
-
-  const statusBloqueio = getStatusBloqueio();
+  }, [emprestimos]);
 
   const validarDados = () => {
     const valorNum = desformatarMoeda(valor);
@@ -91,17 +79,20 @@ export default function FinancialRequest() {
         id_conta: parseInt(contaSelecionada),
       });
 
+      const perfilAtualizado = await getMeuPerfil();
+      setUsuario(perfilAtualizado);
+
       setMensagem("Solicitação de empréstimo enviada com sucesso!");
       setValor("");
       setPrazo(12);
       setFinalidade("");
-      setEnviouSolicitacao(true);
     } catch (e) {
       setErro(e.message || "Erro ao solicitar empréstimo.");
+    } finally {
+      setLoading(true);
     }
   };
 
-  // Renderizações especiais para status bloqueados:
   if (statusBloqueio === 'pendente') {
     return (
       <div className="max-w-xl mx-auto mt-10 p-6 bg-black shadow-lg rounded-2xl text-center">
@@ -112,6 +103,7 @@ export default function FinancialRequest() {
           Você já possui um empréstimo com status <strong>PENDENTE</strong>.<br />
           Aguarde a análise da sua solicitação.
         </p>
+        <ListaEmprestimos emprestimos={emprestimos} />
       </div>
     );
   }
@@ -126,6 +118,7 @@ export default function FinancialRequest() {
           Sua última solicitação foi <strong>REJEITADA</strong>.<br />
           Você está bloqueado para novas solicitações por um período determinado.
         </p>
+        <ListaEmprestimos emprestimos={emprestimos} />
       </div>
     );
   }
@@ -140,6 +133,7 @@ export default function FinancialRequest() {
           Você já possui um empréstimo <strong>APROVADO</strong>.<br />
           Novas solicitações estarão bloqueadas por um período determinado.
         </p>
+        <ListaEmprestimos emprestimos={emprestimos} />
       </div>
     );
   }
@@ -218,9 +212,10 @@ export default function FinancialRequest() {
           <div className="flex justify-center">
             <button
               onClick={handleSubmit}
-              className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75"
+              disabled={loading}
+              className={`px-8 py-3 ${loading ? 'bg-orange-400' : 'bg-orange-600 hover:bg-orange-700'} ...`}
             >
-              Solicitar Empréstimo
+              {loading ? 'Enviando...' : 'Solicitar Empréstimo'}
             </button>
           </div>
         </>
@@ -232,6 +227,54 @@ export default function FinancialRequest() {
       {erro && (
         <p className="mt-4 text-center text-red-500 font-medium">{erro}</p>
       )}
+    </div>
+  );
+}
+
+function ListaEmprestimos({ emprestimos }) {
+  if (!emprestimos || emprestimos.length === 0) {
+    return (
+      <p className="mt-6 text-sm text-gray-400 text-center">
+        Nenhum empréstimo encontrado.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-6 space-y-4">
+      {emprestimos.map((emp, index) => (
+        <div
+          key={index}
+          className="bg-gray-800 rounded-lg p-4 shadow flex flex-col sm:flex-row sm:justify-between text-sm sm:text-base text-gray-200"
+        >
+          <div>
+            <p><span className="text-gray-400">Valor Solicitado:</span> R$ {Number(emp.valor_solicitado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><span className="text-gray-400">Valor Total:</span> R$ {Number(emp.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p><span className="text-gray-400">Taxa de Juros Mensal:</span> {emp.taxa_juros_mensal}%</p>
+            <p><span className="text-gray-400">Prazo:</span> {emp.prazo_meses} meses</p>
+            <p><span className="text-gray-400">Finalidade:</span> {emp.finalidade}</p>
+          </div>
+          <div className="mt-2 sm:mt-0 text-right">
+            <p>
+              <span className="text-gray-400">Status:</span>{" "}
+              <span
+                className={`font-semibold ${emp.status === 'APROVADO'
+                  ? 'text-green-400'
+                  : emp.status === 'REJEITADO'
+                    ? 'text-red-400'
+                    : 'text-blue-400'
+                  }`}
+              >
+                {emp.status}
+              </span>
+            </p>
+            <p>
+              <span className="text-gray-400">Solicitado em:</span>{" "}
+              {new Date(emp.data_solicitacao).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

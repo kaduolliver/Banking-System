@@ -5,6 +5,7 @@ from app.controllers.auth_controller import (
     validar_otp,
     verificar_sessao
 )
+from app.controllers.auth_controller import user_get_profile
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -32,3 +33,8 @@ def verificar_sessao_route():
 def logout_route():
     session.clear()
     return jsonify({'mensagem': 'Logout realizado com sucesso.'}), 200
+
+@auth_bp.get('/api/me')
+def route_get_profile():
+    resposta, status = user_get_profile()
+    return jsonify(resposta), status

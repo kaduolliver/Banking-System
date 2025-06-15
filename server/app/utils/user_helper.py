@@ -96,6 +96,7 @@ def montar_dados_usuario(usuario):
                 'prazo_meses': e.prazo_meses,
                 'valor_total': float(e.valor_total),
                 'status': e.status,
+                'finalidade': e.finalidade,
                 'data_solicitacao': e.data_solicitacao.isoformat(),
                 'data_aprovacao': e.data_aprovacao.isoformat() if e.data_aprovacao else None
             })

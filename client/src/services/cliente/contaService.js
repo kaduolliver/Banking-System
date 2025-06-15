@@ -33,24 +33,73 @@ export async function solicitarAberturaConta(clienteId, tipoConta) {
 }
 
 export const solicitarEmprestimo = async (dadosEmprestimo) => {
-  // Faz uma requisição POST para o endpoint de empréstimos
+  
   const response = await fetch('http://localhost:5000/api/emprestimos', {
-    method: 'POST', // Define o método da requisição como POST
+    method: 'POST', 
     headers: {
       'Content-Type': 'application/json',
-       // Informa que o corpo da requisição é JSON
+      
     },
     credentials: 'include',
-    body: JSON.stringify(dadosEmprestimo), // Converte o objeto JavaScript para uma string JSON
+    body: JSON.stringify(dadosEmprestimo), 
   });
 
-  // Verifica se a resposta da requisição foi bem-sucedida (status 2xx)
+ 
   if (!response.ok) {
-    const errorData = await response.json(); // Tenta parsear o erro do JSON
-    // Lança um erro com a mensagem do backend ou uma mensagem genérica
+    const errorData = await response.json(); 
+    
     throw new Error(errorData.erro || 'Erro ao solicitar empréstimo.');
   }
 
-  // Se a resposta for OK, retorna os dados da resposta (geralmente uma mensagem de sucesso)
+  
   return response.json();
 };
+
+export async function realizarSaque({ id_conta, numero_conta, valor, descricao }) {
+  if (!id_conta && !numero_conta) throw new Error("Informe 'id_conta' ou 'numero_conta' para saque.");
+  if (!valor) throw new Error("Valor para saque não informado.");
+
+  const body = { valor };
+  if (id_conta) body.id_conta = id_conta;
+  if (numero_conta) body.numero_conta = numero_conta;
+  if (descricao) body.descricao = descricao;
+
+  const response = await fetch('http://localhost:5000/api/saque', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.erro || 'Erro ao realizar saque.');
+  }
+
+  return response.json();
+}
+
+export async function realizarDeposito({ id_conta, numero_conta, valor, descricao }) {
+  if (!id_conta && !numero_conta)
+    throw new Error("Informe 'id_conta' ou 'numero_conta' para depósito.");
+  if (!valor) throw new Error("Valor para depósito não informado.");
+
+  const body = { valor };
+  if (id_conta) body.id_conta = id_conta;
+  if (numero_conta) body.numero_conta = numero_conta;
+  if (descricao) body.descricao = descricao;
+
+  const response = await fetch('http://localhost:5000/api/deposito', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.erro || 'Erro ao realizar depósito.');
+  }
+
+  return response.json();
+}

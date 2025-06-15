@@ -15,7 +15,7 @@ UPDATE funcionario
 SET cargo = 'Admin',
     nivel_hierarquico = 3,
 	inativo = false, -- o status do admin nunca deve ser true
-    id_supervisor = NULL -- NULL porque admin não tem supervisor
+    id_supervisor = NULL, -- NULL porque admin não tem supervisor
 	codigo_funcionario = NULL -- obrigatório para funcionar com a função/trigger de incremento
 WHERE id_usuario = 1; -- quem será o admin
 
@@ -215,67 +215,112 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Função que deposita o valor do empréstimo na conta assim que o status é APROVADO
-CREATE OR REPLACE FUNCTION fn_depositar_emprestimo()
+CREATE OR REPLACE FUNCTION fn_depositar_emprestimo_na_conta()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.status = 'APROVADO'
-       AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'APROVADO') THEN
+        AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'APROVADO') THEN
 
+        -- Registra a transação de depósito na tabela de transações.
+        -- A conta do cliente é a 'conta_origem' para o depósito.
+        -- O saldo será atualizado pelo trigger tg_atualizar_saldo_conta.
         INSERT INTO transacao (
             id_conta_origem,
+            id_conta_destino, -- Deve ser NULL, pois a origem é o 'banco' em um depósito de empréstimo.
             tipo_transacao,
             valor,
             data_hora,
             descricao
         ) VALUES (
             NEW.id_conta,
+            NULL,
             'deposito',
             NEW.valor_solicitado,
             CURRENT_TIMESTAMP,
-            CONCAT('Empréstimo ID ', NEW.id_emprestimo)
+            CONCAT('Depósito de Empréstimo ID ', NEW.id_emprestimo, ' aprovado.')
         );
+
+        -- Registrar na auditoria que um empréstimo foi aprovado e o depósito registrado
+        PERFORM fn_registrar_auditoria(
+            NULL, -- ou o ID do funcionário que aprovou, se tiver acesso aqui
+            'EMPRESTIMO_APROVADO_E_DEPOSITADO_REGISTRADO',
+            CONCAT('Empréstimo ID ', NEW.id_emprestimo, ' de R$', NEW.valor_solicitado, ' aprovado e registro de depósito na conta ID ', NEW.id_conta)
+        );
+
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-
--- Função para atualizar o saldo depois de depositar/sacar/transferir (emprestimo)
 CREATE OR REPLACE FUNCTION fn_atualizar_saldo_conta()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_tipo_conta            TEXT;
+    v_saldo                 NUMERIC(15,2);
+    v_limite                NUMERIC(15,2) := 0;
+    v_total_depositos_hoje NUMERIC(15,2);
+    -- Aumentado o limite de depósito diário para acomodar valores maiores de empréstimos
+    LIMITE_DEPOSITO_DIARIO NUMERIC(15,2) := 100000.00; -- Limite de R$ 1.000.000,00
+
 BEGIN
-  -- Verifica saldo suficiente para saque ou transferência
-  IF NEW.tipo_transacao IN ('saque', 'transferencia') THEN
-    IF (SELECT saldo FROM conta WHERE id_conta = NEW.id_conta_origem) < NEW.valor THEN
-      RAISE EXCEPTION 'Saldo insuficiente na conta de origem.';
+    -- 1. Recupera saldo e, se for corrente, o limite da conta de origem
+    SELECT c.tipo_conta,
+           c.saldo,
+           COALESCE(cc.limite, 0)
+    INTO   v_tipo_conta,
+           v_saldo,
+           v_limite
+    FROM   conta c
+    LEFT JOIN conta_corrente cc USING (id_conta)
+    WHERE  c.id_conta = NEW.id_conta_origem;
+
+    -- 2. Valida saldo disponível (existente) para saques e transferências
+    IF NEW.tipo_transacao IN ('saque', 'transferencia') THEN
+        IF (v_saldo + CASE WHEN v_tipo_conta = 'corrente' THEN v_limite ELSE 0 END) < NEW.valor THEN
+            RAISE EXCEPTION 'Saldo (incluindo limite) insuficiente na conta de origem.';
+        END IF;
     END IF;
-  END IF;
 
-  -- DEPÓSITO
-  IF NEW.tipo_transacao = 'deposito' THEN
-    UPDATE conta
-    SET saldo = saldo + NEW.valor
-    WHERE id_conta = NEW.id_conta_origem;
+    -- 3. Verificar limite diário para depósitos
+    IF NEW.tipo_transacao = 'deposito' THEN
+        -- Calcula o total de depósitos feitos na conta_origem HOJE
+        SELECT COALESCE(SUM(valor), 0)
+        INTO v_total_depositos_hoje
+        FROM transacao
+        WHERE id_conta_origem = NEW.id_conta_origem
+          AND tipo_transacao = 'deposito'
+          AND data_hora::DATE = CURRENT_DATE;
 
-  -- SAQUE
-  ELSIF NEW.tipo_transacao = 'saque' THEN
-    UPDATE conta
-    SET saldo = saldo - NEW.valor
-    WHERE id_conta = NEW.id_conta_origem;
+        -- Se a soma dos depósitos de hoje mais o novo depósito exceder o limite
+        IF (v_total_depositos_hoje + NEW.valor) > LIMITE_DEPOSITO_DIARIO THEN
+            RAISE EXCEPTION 'Limite de depósito diário de R$ % atingido para esta conta. Total depositado hoje: R$ %. Depósito atual: R$ %.',
+                            LIMITE_DEPOSITO_DIARIO, v_total_depositos_hoje, NEW.valor;
+        END IF;
+    END IF;
 
-  -- TRANSFERÊNCIA
-  ELSIF NEW.tipo_transacao = 'transferencia' THEN
-    UPDATE conta
-    SET saldo = saldo - NEW.valor
-    WHERE id_conta = NEW.id_conta_origem;
+    -- 4. Atualiza saldo
+    IF NEW.tipo_transacao = 'deposito' THEN
+        UPDATE conta
+        SET saldo = saldo + NEW.valor
+        WHERE id_conta = NEW.id_conta_origem;
 
-    UPDATE conta
-    SET saldo = saldo + NEW.valor
-    WHERE id_conta = NEW.id_conta_destino;
-  END IF;
+    ELSIF NEW.tipo_transacao = 'saque' THEN
+        UPDATE conta
+        SET saldo = saldo - NEW.valor
+        WHERE id_conta = NEW.id_conta_origem;
 
-  RETURN NEW;
+    ELSIF NEW.tipo_transacao = 'transferencia' THEN
+        UPDATE conta
+        SET saldo = saldo - NEW.valor
+        WHERE id_conta = NEW.id_conta_origem;
+
+        UPDATE conta
+        SET saldo = saldo + NEW.valor
+        WHERE id_conta = NEW.id_conta_destino;
+    END IF;
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -403,17 +448,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger para empréstimo
-CREATE TRIGGER depositar_emprestimo
-AFTER INSERT OR UPDATE ON emprestimo
-FOR EACH ROW
-EXECUTE FUNCTION fn_depositar_emprestimo();
-
 -- Trigger para atualizar saldo
 CREATE TRIGGER tg_atualizar_saldo_conta
 BEFORE INSERT ON transacao
 FOR EACH ROW
 EXECUTE FUNCTION fn_atualizar_saldo_conta();
+
+-- Trigger para empréstimo
+CREATE OR REPLACE TRIGGER depositar_emprestimo_trigger
+AFTER INSERT OR UPDATE ON emprestimo
+FOR EACH ROW
+EXECUTE FUNCTION fn_depositar_emprestimo_na_conta();
 
 -- Trigger para criar conta
 CREATE TRIGGER trg_criar_conta_apos_aprovacao
@@ -443,7 +488,7 @@ WHEN (
 )
 EXECUTE FUNCTION gerar_codigo_funcionario();
 
--- View empréstimos ativos
+-- View empréstimos ativos para gerar relatório
 CREATE OR REPLACE VIEW vw_emprestimos_ativos AS
 SELECT
 	e.id_emprestimo,
@@ -463,7 +508,7 @@ CREATE OR REPLACE PROCEDURE processar_emprestimo(
     IN p_id_conta       INT,
     IN p_valor          NUMERIC(15,2),
     IN p_prazo          INT,
-    IN p_finalidade     VARCHAR(50),
+    IN p_finalidade     VARCHAR(100),
     IN p_score_risco    NUMERIC(5,2)
 )
 LANGUAGE plpgsql

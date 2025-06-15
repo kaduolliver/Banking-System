@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     getSolicitacoesPendentes,
-    aprovarSolicitacao,
-    rejeitarSolicitacao,
+    aprovarSolicitacaoConta,
+    rejeitarSolicitacaoConta,
 } from '../../../../../services/employee/requestsService';
 import { useAuth } from '../../../../../context/authContext';
 
@@ -123,14 +123,14 @@ export default function AccountRequests() {
                             {isManager && (
                                 <div className="mt-3 flex gap-2">
                                     <button
-                                        onClick={() => processSolicitacao(s.id_solicitacao, aprovarSolicitacao)}
+                                        onClick={() => processSolicitacao(s.id_solicitacao, aprovarSolicitacaoConta)}
                                         className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={processing === s.id_solicitacao}
                                     >
                                         {processing === s.id_solicitacao ? 'Aprovando…' : 'Aprovar'}
                                     </button>
                                     <button
-                                        onClick={() => processSolicitacao(s.id_solicitacao, rejeitarSolicitacao)}
+                                        onClick={() => processSolicitacao(s.id_solicitacao, rejeitarSolicitacaoConta)}
                                         className="flex-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         disabled={processing === s.id_solicitacao}
                                     >

@@ -1,12 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState, useCallback } from 'react';
-
-// import {
-//   getSolicitacoesEmprestimosPendentes,
-//   aprovarSolicitacao,
-//   rejeitarSolicitacao,
-// } from '../../../../services/employee/requestsService';
+import {
+  getSolicitacoesEmprestimosPendentes,
+  aprovarSolicitacaoEmprestimo,
+  rejeitarSolicitacaoEmprestimo,
+} from '../../../../../services/employee/requestsService';
 import { useAuth } from '../../../../../context/authContext';
+import { corDoScore } from '../../../../../utils/formatters';
 
 export default function FinancialRequests() {
   const { usuario, carregando: carregandoAuth } = useAuth();
@@ -14,7 +14,7 @@ export default function FinancialRequests() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
   const [erro, setErro] = useState(null);
-
+  
   const isManager =
     usuario?.tipo_usuario === 'funcionario' &&
     ['Admin', 'Gerente'].includes(usuario?.cargo);
@@ -40,7 +40,7 @@ export default function FinancialRequests() {
     try {
       setProcessing(id);
       await actionFn(id);
-      setSolicitacoes((prev) => prev.filter((s) => s.id_solicitacao !== id));
+      setSolicitacoes((prev) => prev.filter((s) => s.id_emprestimo !== id));
     } catch (err) {
       console.error(err);
       setErro('Ocorreu um erro. Tente novamente.');
@@ -51,7 +51,7 @@ export default function FinancialRequests() {
 
   const LoadingOrEmpty = ({ children, className = '' }) => (
     <div
-      className={`max-w-3xl mx-auto mt-10 p-6 bg-black rounded-2xl shadow-lg text-center text-gray-400 ${className}`}
+      className={`max-w-3xl mx-auto p-6 bg-black rounded-2xl shadow-lg text-center text-gray-400 ${className}`}
     >
       {children}
     </div>
@@ -60,15 +60,17 @@ export default function FinancialRequests() {
   if (carregandoAuth)
     return <LoadingOrEmpty>Verificando autenticação…</LoadingOrEmpty>;
 
-  if (!usuario || (!isManager && usuario.cargo !== 'Estagiário'))
+  if (!usuario || (usuario.tipo_usuario === 'funcionario' && !isManager))
     return (
-      <LoadingOrEmpty className="text-red-400">
-        Acesso negado. Permissão insuficiente.
+      <LoadingOrEmpty className="text-red-400 text-lg">
+        <p>Acesso <strong>negado</strong>.</p> 
+        <p>Você não tem permissão para acessar essa funcionalidade.</p>
       </LoadingOrEmpty>
     );
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 p-4 bg-black rounded-2xl shadow-lg text-white">
+    <div className="max-w-5xl mx-auto p-4 bg-black rounded-2xl shadow-lg text-white">
+      <h2 className="text-center text-xl font-semibold mb-6">Empréstimos Pendentes</h2>
       <TabBody
         solicitacoes={solicitacoes}
         loading={loading}
@@ -115,7 +117,7 @@ function TabBody({
         <AnimatePresence initial={false}>
           {solicitacoes.map((s) => (
             <motion.div
-              key={s.id_solicitacao}
+              key={s.id_emprestimo}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -125,7 +127,13 @@ function TabBody({
               <div className="space-y-1 text-xs sm:text-sm">
                 <p>
                   <span className="font-medium text-gray-400">Cliente:</span>{' '}
-                  <span className="font-semibold">{s.nome_cliente}</span>
+                  <span className="font-semibold">{s.cliente}</span>
+                </p>
+                <p>
+                  <span className="font-medium text-gray-400">Score:</span>{' '}
+                  <span className={`font-semibold ${corDoScore(s.score_risco)}`}>
+                    {s.score_risco ?? '—'}
+                  </span>
                 </p>
                 <p>
                   <span className="font-medium text-gray-400">Valor:</span>{' '}
@@ -133,7 +141,7 @@ function TabBody({
                 </p>
                 <p>
                   <span className="font-medium text-gray-400">Parcelas:</span>{' '}
-                  {s.qtd_parcelas}
+                  {s.prazo_meses}
                 </p>
                 <p>
                   <span className="font-medium text-gray-400">Data:</span>{' '}
@@ -149,21 +157,21 @@ function TabBody({
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() =>
-                      processSolicitacao(s.id_solicitacao, aprovarSolicitacao)
+                      processSolicitacao(s.id_emprestimo, aprovarSolicitacaoEmprestimo)
                     }
                     className="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={processing === s.id_solicitacao}
+                    disabled={processing === s.id_emprestimo}
                   >
-                    {processing === s.id_solicitacao ? 'Aprovando…' : 'Aprovar'}
+                    {processing === s.id_emprestimo ? 'Aprovando…' : 'Aprovar'}
                   </button>
                   <button
                     onClick={() =>
-                      processSolicitacao(s.id_solicitacao, rejeitarSolicitacao)
+                      processSolicitacao(s.id_emprestimo, rejeitarSolicitacaoEmprestimo)
                     }
                     className="flex-1 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={processing === s.id_solicitacao}
+                    disabled={processing === s.id_emprestimo}
                   >
-                    {processing === s.id_solicitacao ? 'Rejeitando…' : 'Rejeitar'}
+                    {processing === s.id_emprestimo ? 'Rejeitando…' : 'Rejeitar'}
                   </button>
                 </div>
               )}

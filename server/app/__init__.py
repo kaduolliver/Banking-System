@@ -15,7 +15,8 @@ def create_app():
     
     app.config['DEBUG'] = True
 
-    CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+    #CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+    CORS(app, supports_credentials=True)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(client_bp)
