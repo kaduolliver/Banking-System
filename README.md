@@ -125,147 +125,130 @@ Desenvolvedores do projeto:
 
 É necessário ter os seguintes programas instalados:
 
-- Node.js (versão 16+)
-
 - PostgreSQL
 
 - Git (para clonar o repositório) **OBS:** caso queira fazer manualmente, pule o passo 1.
 
 ### 1. Clonar o repositório
+---
+<pre>git clone https://github.com/kaduolliver/Banking-System.git
 
-<pre>git clone https://github.com/kaduolliver/heartcare.git
-
-cd heartcare
+cd Banking-System
 
 code .
 </pre>
 
 ### 2. Criar o arquivo `.env` na raiz do projeto
-
+---
 Crie um arquivo chamado `.env` na raiz com os seguintes dados (ajuste conforme o seu banco de dados local)
 
-<pre>.env<pre>DB_USER=postgres
+Exemplo:
+<pre>.env<pre>DB_USER=postgres (por padrão)
 DB_HOST=localhost
-DB_NAME=heartcare
-DB_PASSWORD=12345678
-DB_PORT=5432
+DB_NAME=seu_banco
+DB_PASSWORD=sua_senha
+DB_PORT=5432 (por padrão)
+SECRET_KEY=sua_key
 </pre></pre>
 
-**OBS:**
-
-- **DB_USER** -> é o usuario do PostgreSQL, vem padrão como `postgres`, mas se foi alterado na instalação, será necessário ajustar de acordo;
-
-- **DB_HOST** -> padrão (localhost);
-
-- **DB_NAME** -> é necessário que seja `heartcare` (nome do banco de dados do programa);
-
-- **DB_PASSWORD** -> vai depender de qual senha você colocou ao instalar o PostgreSQL;
-
-- **DB_PORT** -> padrão (5432).
-
-### 3. Criar o banco de Dados no PostgreSQL
-
-Entre no pgAdmin 4 e crie uma nova Database com o nome "heartcare", selecione a database criada e aperte em Query Tool (Alt+Shift+Q), copie os comandos e execute (F5):
+Para gerar uma key digite no terminal:
 
 <pre>
--- Tabela de usuários
-CREATE TABLE usuarios (
-  id SERIAL PRIMARY KEY,
-  nome VARCHAR(100) NOT NULL,
-  cpf VARCHAR(11) UNIQUE NOT NULL,
-  nascimento DATE NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  telefone VARCHAR(15) UNIQUE NOT NULL,
-  senha VARCHAR(200) NOT NULL,
-  sexo VARCHAR(10),
-  tipo_sanguineo VARCHAR(5),
-  endereco TEXT
-);
+python
 
--- Tabela de médicos
-CREATE TABLE medicos (
-  crm VARCHAR(20) PRIMARY KEY,
-  nome VARCHAR(100),
-  especialidade VARCHAR(100)
-);
+import secrets
 
--- Tabela de consultas
-CREATE TABLE consultas (
-  id SERIAL PRIMARY KEY,
-  cpf_usuario VARCHAR(11) REFERENCES usuarios(cpf) ON DELETE CASCADE,
-  crm_medico VARCHAR(20) REFERENCES medicos(crm),
-  especialidade VARCHAR(100),
-  medico VARCHAR(100),
-  data_agendamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  data_consulta TIMESTAMP
-);
+print(secrets.token_hex(32)) 
 </pre>
 
-### 3.1 Adicione os médicos a tabela `medicos`
 
-<pre>INSERT INTO medicos (crm, nome, especialidade) VALUES
-('BA-789.123', 'Dr. Marcelo Henrique Barbosa', 'Cardiologia Geriátrica'),
-('CE-567.890', 'Dr. Diego Nascimento Silva', 'Cardiologia de Emergência'),
-('DF-345.678', 'Dra. Camila Ribeiro Dias', 'Cardiologia Preventiva'),
-('MG-456.789', 'Dra. Fernanda Oliveira Almeida', 'Arritmologia e Eletrofisiologia'),
-('PE-876-543', 'Dr. Lucas Pereira Gomes', 'Imagenologia Cardiovascular'),
-('PR-654.321', 'Dra. Juliana Costa Lima', 'Cardiologia do Esporte'),
-('RJ-987.654', 'Dr. Carlos Eduardo Rocha', 'Cardiologia Intervencionista'),
-('RS-321.987', 'Dr. Rafael Torres Almeida', 'Cardiologia Pediátrica'),
-('SC-234.567', 'Dra. Patricia Souza Martins', 'Insuficiência Cardíaca e Transplante'),
-('SP-123.456', 'Dra. Ana Lucia Mendes', 'Cardiologia Clínica');
+### 3. Criar o banco de Dados no PostgreSQL
+---
+Entre no pgAdmin 4 e crie uma nova Database e o mesmo nome que colocar deve por no DB_NAME do `.env`, selecione a database criada e aperte em Query Tool (Alt+Shift+Q), copie os comandos e execute (F5):
+
+<pre>
+O arquivo .sql para criar as tabelas/funções/triggers, etc:
+
+Cod. PostgreSQL [atualizado].sql
 </pre>
 
-### 4. Instalar dependências
+### 3.1 Adicione a `Agência` e o `Admin`/`Gerente`
+---
+Considerações importantes:
 
-Dentro da raiz do projeto, rode:
+Depois de criar as tabelas/funções, etc. Execute o comando:
 
-<pre>npm install
-</pre>
+<pre>INSERT INTO agencia (nome, codigo_agencia)
+VALUES ('Agencia Central', '001');</pre>
 
-**Lembrando:** a raiz do projeto é `/heartcare>`
+Para criar a agência.
 
-### 5. Rodar o servidor
+Depois de cadastrar 2 funcionários, deve inserir a hierarquia de 'Admin' e 'Gerente':
 
-<pre>node server/server.js
+<pre>UPDATE funcionario
+SET cargo = 'Admin',
+    nivel_hierarquico = 3,
+	inativo = false,
+    id_supervisor = NULL,
+	codigo_funcionario = NULL
+WHERE id_usuario = 1;</pre>
 
-ou
+<pre>UPDATE funcionario
+SET cargo = 'Gerente',
+    nivel_hierarquico = 2,
+	inativo = false,
+    id_supervisor = 1, 
+	codigo_funcionario = NULL 
+WHERE id_usuario = 2; </pre>
 
-nodemon server/server.js</pre>
+### 4. Criar ambiente virtual `venv`
+---
+No terminal (ou prompt de comando), dentro da pastar /server:
 
-O servidor estará disponível em:
+<pre>python -m venv venv</pre>
 
-`http://localhost:3000`
+Depois ative:
 
-### 6. Acessar a aplicação
+<pre>venv\Scripts\activate</pre>
 
-Abra seu navegador e acesse:
+### 5. Instalar dependências do requirements.txt
+---
+Com o (venv) ativado, execute:
 
-<pre>http://localhost:3000
-</pre>
+<pre>pip install -r requirements.txt</pre>
 
-### 7. Teste as funcionalidades
+### 6. Rodar o servidor
+---
+**Com depêndencias baixadas e .env configurado, execute no /server:**
 
-- Cadastro: `/pages/register.html`
+<pre>python run.py</pre>
 
-- Login: `/pages/login.html`
+Servidor backend ativado! Agora precisamos ativar o frontend.
+Não exclua o prompt que esta rodando o backend, crie outro.
 
-- Área do usuário: `/pages/user.html`
+### 7. Acessar o Frontend
+---
+Com outro prompt execute:
 
-- Agendar Consulta: pela aba "Marcar Consulta"
+<pre>cd /client
+npm install</pre>
 
-- Ver Consultas: "Consultas Agendadas"
+Aguarde as dependencias do /node_modules baixarem
+Então...
 
-- Conferir os dados sendo cadastrados dentro do **Banco de Dados**
+<pre>npm run dev</pre>
 
-### 8. Parar o servidor
+Acesse a porta http://localhost:5173/ no seu navegador
 
-Pressione `Ctrl + C` no terminal.
+**Se quiser testar a funcionalidade do QRCode acesse a porta IP da sua máquina**
 
-## PARA RODAR OS TESTES ##
+Abra o cmd e execute:
 
-Agora que todas as dependências estão instaladas e o ambiente está configurado, pode rodar os testes.
+<pre>ipconfig</pre>
 
-Execute no terminal:
-<pre>npm run test</pre>
+Acesse o IPv4 no seu navegador com a rota :5163/
+
+**QRCode funciona se seu celular e máquina estiver na mesma rede**
+
+---
 
