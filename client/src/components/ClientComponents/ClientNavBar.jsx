@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Globe, Banknote, User, Bell, Landmark, LogOut, Handshake, CreditCard } from "lucide-react";
 import { useAuth } from '../../context/authContext';
 import NotificationPanel from "../UserComponents/NotificationPanel";
+import { capitalize } from "../../utils/formatters";
 
 const ClientNavbar = () => {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
 
+  const [showSaldoDropdown, setShowSaldoDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
     {
@@ -25,8 +27,8 @@ const ClientNavbar = () => {
   ]);
 
   const handleLogout = () => {
-    logout();   // limpa usuário e storage
-    navigate('/');  // manda para home após logout
+    logout(); 
+    navigate('/');  
   };
 
   const removeNotification = (index) => {
@@ -39,8 +41,8 @@ const ClientNavbar = () => {
       ? '/user/employee'
       : '/';
 
-  const saldo = usuario?.contas?.[0]?.saldo ?? 0;
-
+  //const saldo = usuario?.contas?.[0]?.saldo ?? 0;
+  const saldoTotal = usuario?.contas?.reduce((acc, conta) => acc + (conta.saldo ?? 0), 0) ?? 0;
 
   return (
     <>
@@ -67,11 +69,37 @@ const ClientNavbar = () => {
               <span className="absolute left-0 -bottom-1 w-0 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-600 transition-all duration-300 group-hover:w-full"></span>
             </Link>
 
-            <p to="/" className="hover:text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
-              <Banknote />
-              {saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowSaldoDropdown(true)}
+              onMouseLeave={() => setShowSaldoDropdown(false)}
+            >
+              <button className="hover:text-amber-400 flex font-bold items-center gap-2 transition relative top-1">
+                <Banknote />
+                <span>Ver Saldos</span> {/* Texto principal para o dropdown */}
+              </button>
 
-            </p>
+              {showSaldoDropdown && (
+                <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-20 py-1">
+                  {usuario?.contas && usuario.contas.length > 0 ? (
+                    usuario.contas.map((conta, index) => (
+                      <div key={index} className="px-4 py-2 text-white hover:bg-gray-700 text-sm">
+                        {capitalize(conta.tipo)}: {conta.saldo?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) ?? 'R$ 0,00'}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-white text-sm">Nenhuma conta disponível</div>
+                  )}
+                  {/* Opcional: Mostrar saldo total no final do dropdown */}
+                  {usuario?.contas && usuario.contas.length > 1 && ( 
+                    <div className="border-t border-gray-700 mt-1 pt-1 px-4 py-2 text-amber-400 font-bold text-sm">
+                      Total: {saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Fim do Dropdown de Saldos */}
           </nav>
 
           <div className="relative right-10 flex items-center gap-10" style={{ fontFamily: 'Aileron, sans-serif' }}>

@@ -4,9 +4,7 @@ from app.models.cliente import Cliente
 from app.models.conta import Conta
 
 def solicitar_emprestimo(id_usuario: int, data: dict):
-    """
-    Processa a solicitação de empréstimo de um cliente, chamando a procedure no banco de dados.
-    """
+    
     db = SessionLocal()
     try:
         cliente = db.query(Cliente).filter_by(id_usuario=id_usuario).first()
@@ -28,7 +26,6 @@ def solicitar_emprestimo(id_usuario: int, data: dict):
         if not conta:
             raise ValueError("A conta selecionada não pertence a este cliente ou não existe.")
 
-        # Chamada da nova procedure, sem o parâmetro 'p_aprovado'
         db.execute(text(
             "CALL processar_emprestimo(:p_id_cliente, :p_id_conta, :p_valor, :p_prazo, :p_finalidade, :p_score_risco)"
         ), {
@@ -41,7 +38,6 @@ def solicitar_emprestimo(id_usuario: int, data: dict):
         })
         db.commit()
 
-        # Decide status da mensagem com base na regra usada na procedure
         status_msg = "aprovado automaticamente (score ≥ 80)" if score_credito >= 80 else "aguardando análise manual"
         return {'mensagem': f'Solicitação de empréstimo registrada. Status inicial: {status_msg}.'}
 

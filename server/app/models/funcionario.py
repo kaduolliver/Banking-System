@@ -19,3 +19,4 @@ class Funcionario(Base):
     relatorios = relationship("Relatorio", back_populates="funcionario")
     solicitacoes_aprovadas = relationship("SolicitacaoConta", back_populates="funcionario_aprovador")
     agencia = relationship("Agencia", back_populates="funcionarios")
+    emprestimos_aprovados = relationship("Emprestimo", back_populates="funcionario_aprovador")

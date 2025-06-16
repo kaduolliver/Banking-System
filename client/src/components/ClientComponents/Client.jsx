@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/authContext';
 import ClientTabs from './ClientTabs';
-import ClientNavbar from './ClientNavbar';
+import ClientNavbar from './ClientNavBar';
 import ScreenOverlay from '../EffectsComponents/ScreenOverlay';
 import SplashScreen from '../EffectsComponents/SplashScreen';
 import BackgroundGrain from '../EffectsComponents/BackgroundGrain';

@@ -3,7 +3,8 @@ from app.controllers.auth_controller import (
     registrar_usuario,
     login_usuario,
     validar_otp,
-    verificar_sessao
+    verificar_sessao,
+    logout_usuario
 )
 from app.controllers.auth_controller import user_get_profile
 
@@ -31,8 +32,8 @@ def verificar_sessao_route():
 
 @auth_bp.route('/api/logout', methods=['POST'])
 def logout_route():
-    session.clear()
-    return jsonify({'mensagem': 'Logout realizado com sucesso.'}), 200
+    resposta, status = logout_usuario()
+    return jsonify(resposta), status
 
 @auth_bp.get('/api/me')
 def route_get_profile():

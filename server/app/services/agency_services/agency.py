@@ -122,7 +122,7 @@ def get_endereco_agencia(agencia_id):
         endereco = db.query(Endereco).filter_by(id_agencia=agencia_id).first()
         if endereco:
             return {
-                'id_endereco': endereco.id_endereco, # Incluindo o ID do endereço
+                'id_endereco': endereco.id_endereco,
                 'cep': endereco.cep,
                 'logradouro': endereco.logradouro,
                 'numero_casa': endereco.numero_casa,

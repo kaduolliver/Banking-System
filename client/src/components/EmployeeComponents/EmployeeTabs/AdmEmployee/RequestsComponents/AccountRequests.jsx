@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    getSolicitacoesPendentes,
-    aprovarSolicitacaoConta,
-    rejeitarSolicitacaoConta,
-} from '../../../../../services/employee/requestsService';
+import { getSolicitacoesPendentes, aprovarSolicitacaoConta, rejeitarSolicitacaoConta } from '../../../../../services/employee/requestsService';
 import { useAuth } from '../../../../../context/authContext';
 
 export default function AccountRequests() {
@@ -48,7 +44,7 @@ export default function AccountRequests() {
         try {
             setProcessing(id);
             await actionFn(id);
-            // Remove localmente para animar saída
+            
             setSolicitacoes((prev) => prev.filter((s) => s.id_solicitacao !== id));
         } catch (err) {
             console.error(err);

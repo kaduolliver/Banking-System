@@ -40,18 +40,16 @@ export function AuthProvider({ children }) {
 
   const atualizarUsuario = async (novosDados) => {
     if (novosDados) {
-      // --- atualização local: sempre crie objetos/arrays novos
       return setUsuario(prev => ({
         ...prev,
         ...novosDados,
-        // se vier array de contas novo, garanta nova referência
         contas: novosDados.contas ? [...novosDados.contas] : prev.contas,
       }));
     }
 
     try {
-      const perfil = await getMeuPerfil();      // GET /api/me
-      setUsuario(perfil);                       // objeto fresco do backend
+      const perfil = await getMeuPerfil();      
+      setUsuario(perfil);                       
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
     }

@@ -12,6 +12,23 @@ from sqlalchemy.exc import IntegrityError
 from flask import session
 from sqlalchemy.orm import joinedload, subqueryload
 from app.utils.user_helper import montar_dados_usuario
+from sqlalchemy import text
+
+# Funcionamento de um .joinedload
+
+# Usuario
+# ├── Funcionario
+# │   └── Agencia
+# └── Cliente
+#     ├── Emprestimos
+#     └── Contas
+#         ├── Agencia
+#         ├── Corrente
+#         ├── Poupanca
+#         └── Investimento
+
+MAX_TENTATIVAS_LOGIN = 3
+TEMPO_BLOQUEIO_MINUTOS = 5
 
 def registrar_usuario(data):
     db = SessionLocal()
@@ -104,8 +121,74 @@ def login_usuario(data):
             joinedload(Usuario.funcionario).joinedload(Funcionario.agencia)
         ).filter_by(cpf=data['cpf']).first()
 
-        if not usuario or not verificar_senha(data['senha'], usuario.senha_hash):
+        if not usuario:
+            try:
+                db.execute(text("SELECT fn_registrar_auditoria(NULL, :acao, :detalhes);"),
+                           {"acao": "TENTATIVA_LOGIN_CPF_INEXISTENTE",
+                            "detalhes": f"Tentativa de login para CPF inexistente: {data['cpf']}"})
+                db.commit()
+            except Exception as audit_e:
+                print(f"Erro ao registrar auditoria de CPF inexistente: {audit_e}")
             return {'erro': 'CPF ou senha inválidos.'}, 401
+
+        if usuario.data_bloqueio:
+            
+            if datetime.now() < (usuario.data_bloqueio + timedelta(minutes=TEMPO_BLOQUEIO_MINUTOS)):
+                
+                return {'erro': f'Sua conta está temporariamente bloqueada. Tente novamente em {TEMPO_BLOQUEIO_MINUTOS} minutos.'}, 403
+            else:
+                
+                usuario.tentativas_login_falhas = 0
+                usuario.data_bloqueio = None
+                db.commit() 
+
+                try:
+                    db.execute(text("SELECT fn_registrar_auditoria(:user_id, :acao, :detalhes);"),
+                               {"user_id": usuario.id_usuario,
+                                "acao": "CONTA_DESBLOQUEADA_AUTOMATICAMENTE",
+                                "detalhes": f"Conta ID {usuario.id_usuario} desbloqueada automaticamente após {TEMPO_BLOQUEIO_MINUTOS} minutos."})
+                    db.commit() 
+                except Exception as audit_e:
+                    print(f"Erro ao registrar desbloqueio automático na auditoria: {audit_e}")
+                    db.rollback() 
+
+        
+        if not verificar_senha(data['senha'], usuario.senha_hash):
+            usuario.tentativas_login_falhas += 1
+            db.commit() 
+
+            try:
+                db.execute(text("SELECT fn_registrar_auditoria(:user_id, :acao, :detalhes);"),
+                           {"user_id": usuario.id_usuario,
+                            "acao": "FALHA_LOGIN_SENHA_INCORRETA",
+                            "detalhes": f"Tentativa de login falhou para CPF {usuario.cpf}. Tentativa {usuario.tentativas_login_falhas} de {MAX_TENTATIVAS_LOGIN}."})
+                db.commit() 
+            except Exception as audit_e:
+                print(f"Erro ao registrar falha de login na auditoria para o usuário {usuario.id_usuario}: {audit_e}")
+                db.rollback() 
+
+            
+            if usuario.tentativas_login_falhas >= MAX_TENTATIVAS_LOGIN:
+                usuario.data_bloqueio = datetime.now()
+                db.commit() 
+
+                try:
+                    db.execute(text("SELECT fn_registrar_auditoria(:user_id, :acao, :detalhes);"),
+                               {"user_id": usuario.id_usuario,
+                                "acao": "CONTA_BLOQUEADA_TENTATIVAS",
+                                "detalhes": f"Conta ID {usuario.id_usuario} bloqueada após {MAX_TENTATIVAS_LOGIN} tentativas de senha inválidas."})
+                    db.commit() 
+                except Exception as audit_e:
+                    print(f"Erro ao registrar bloqueio de conta na auditoria para o usuário {usuario.id_usuario}: {audit_e}")
+                    db.rollback() 
+
+                return {'erro': f'CPF ou senha inválidos. Sua conta foi bloqueada por {TEMPO_BLOQUEIO_MINUTOS} minutos.'}, 401
+            else:
+            
+                return {'erro': f'CPF ou senha inválidos. Você tem mais {MAX_TENTATIVAS_LOGIN - usuario.tentativas_login_falhas} tentativas antes que sua conta seja bloqueada.'}, 401
+
+        usuario.tentativas_login_falhas = 0
+        usuario.data_bloqueio = None
 
         otp = gerar_otp()
         expiracao = datetime.now() + timedelta(minutes=5)
@@ -180,6 +263,16 @@ def validar_otp(data):
 
         db.commit()
 
+        try:
+            db.execute(text("SELECT fn_registrar_auditoria(:user_id, :acao, :detalhes);"),
+                       {"user_id": usuario.id_usuario,
+                        "acao": "LOGIN_SUCESSO", 
+                        "detalhes": f"Usuário {usuario.nome} ({usuario.tipo_usuario}) realizou login com sucesso após OTP."})
+            db.commit() 
+        except Exception as audit_e:
+            print(f"Erro ao registrar login de sucesso na auditoria para o usuário {usuario.id_usuario}: {audit_e}")
+            db.rollback() 
+
         dados_usuario = montar_dados_usuario(usuario)
 
         if usuario.tipo_usuario == 'funcionario' and usuario.funcionario:
@@ -191,6 +284,36 @@ def validar_otp(data):
             'mensagem': 'Login completo!',
             **dados_usuario
         }, 200
+
+    except Exception as e:
+        db.rollback()
+        return {'erro': str(e)}, 500
+    finally:
+        db.close()
+
+def logout_usuario():
+    db = SessionLocal()
+    try:
+        user_id = session.get('id_usuario')
+        if not user_id:
+            return {'erro': 'Nenhum usuário logado na sessão.'}, 400
+
+        usuario = db.query(Usuario).filter_by(id_usuario=user_id).first()
+        if usuario:
+            usuario.otp_codigo = None
+            usuario.otp_expiracao = None
+            usuario.otp_ativo = False
+            db.commit()
+
+        try:
+            db.execute(text("SELECT fn_registrar_logout(:user_id);"), {"user_id": user_id})
+            db.commit() 
+        except Exception as audit_e:
+            print(f"Erro ao registrar logout na auditoria para o usuário {user_id}: {audit_e}")
+            db.rollback() 
+
+        session.clear() 
+        return {'mensagem': 'Logout realizado com sucesso.'}, 200
 
     except Exception as e:
         db.rollback()
@@ -260,3 +383,4 @@ def obter_usuario_atual(id_usuario: int):
         return montar_dados_usuario(usuario)
     finally:
         db.close()
+

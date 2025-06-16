@@ -1,10 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState, useCallback } from 'react';
-import {
-  getSolicitacoesEmprestimosPendentes,
-  aprovarSolicitacaoEmprestimo,
-  rejeitarSolicitacaoEmprestimo,
-} from '../../../../../services/employee/requestsService';
+import { getSolicitacoesEmprestimosPendentes, aprovarSolicitacaoEmprestimo, rejeitarSolicitacaoEmprestimo } from '../../../../../services/employee/requestsService';
 import { useAuth } from '../../../../../context/authContext';
 import { corDoScore } from '../../../../../utils/formatters';
 

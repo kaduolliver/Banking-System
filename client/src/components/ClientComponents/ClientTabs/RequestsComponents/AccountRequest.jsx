@@ -34,7 +34,7 @@ export default function FinancialServices() {
                 .map(([tipo]) => tipo);
 
             if (tiposDisponiveis.length > 0) {
-                setTipoConta(tiposDisponiveis[0]); // <-- Corrige o tipo inicial
+                setTipoConta(tiposDisponiveis[0]);
             }
         }
     }, [carregando, usuario]);
@@ -59,8 +59,7 @@ export default function FinancialServices() {
                     {
                         status: 'PENDENTE',
                         tipo: tipoConta,
-                        // outras propriedades que achar relevante incluir para exibição
-                        id_solicitacao: Date.now(), // só um id temporário, se quiser
+                        id_solicitacao: Date.now(),
                         data_solicitacao: new Date().toISOString(),
                     },
                 ],

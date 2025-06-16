@@ -18,9 +18,11 @@ class Emprestimo(Base):
     status = Column(String(20), nullable=False, default='PENDENTE')
     score_risco = Column(Numeric(5, 2))
     finalidade = Column(String(100), nullable=False) 
+    id_funcionario_aprovador = Column(Integer, ForeignKey('funcionario.id_funcionario'), nullable=True)
 
     cliente = relationship("Cliente", back_populates="emprestimos")
     conta = relationship("Conta", back_populates="emprestimos")
+    funcionario_aprovador = relationship("Funcionario", back_populates="emprestimos_aprovados")
 
     __table_args__ = (
         CheckConstraint("prazo_meses BETWEEN 6 AND 60", name='check_prazo_meses'),

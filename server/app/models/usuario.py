@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Boolean, TIMESTAMP, CheckConstraint
+from sqlalchemy import Column, Integer, String, Date, Boolean, TIMESTAMP, CheckConstraint, DateTime
 from sqlalchemy.orm import relationship
 from app.database.db import Base
 from app.models.endereco import Endereco  
@@ -16,6 +16,8 @@ class Usuario(Base):
     otp_ativo = Column(Boolean, default=False)
     otp_codigo = Column(String(6))
     otp_expiracao = Column(TIMESTAMP)
+    tentativas_login_falhas = Column(Integer, default=0, nullable=False)
+    data_bloqueio = Column(DateTime, nullable=True)
 
     cliente = relationship("Cliente", back_populates="usuario", uselist=False)
     funcionario = relationship("Funcionario", back_populates="usuario", uselist=False)

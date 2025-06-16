@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ShieldUser, SettingsIcon, HandCoins, SlidersHorizontal, ClipboardList, Building } from 'lucide-react';
 import UserTab from '../UserComponents/UserTab';
-import AdmPersonalData from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AdmPersonalData';
+import EmpPersonalData from '../EmployeeComponents/EmployeeTabs/AdmEmployee/EmpPersonalData';
 import FinancialRequests from '../EmployeeComponents/EmployeeTabs/AdmEmployee/FinancialRequests'
 import ManagerConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ManagerConfig';
-//import ReportsConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ReportsConfig';
+import ReportsConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/ReportsConfig';
 import AgencyConfig from '../EmployeeComponents/EmployeeTabs/AdmEmployee/AgencyConfig';
 import { useAuth } from '../../context/authContext';
 
@@ -20,7 +20,7 @@ export default function EmployeeTabs() {
       value: 'dados',
       label: 'Dados Pessoais',
       icon: ShieldUser,
-      content: < AdmPersonalData />
+      content: < EmpPersonalData />
     },
     isAdministrador && {
       value: 'manager',
@@ -44,7 +44,7 @@ export default function EmployeeTabs() {
       value: 'reports',
       label: 'Relatórios',
       icon: ClipboardList,
-      //content: < ReportsConfig />
+      content: < ReportsConfig />
     },
     {
       value: 'config',

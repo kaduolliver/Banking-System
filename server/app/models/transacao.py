@@ -13,6 +13,7 @@ class Transacao(Base):
     valor = Column(Numeric(15, 2), nullable=False)
     data_hora = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc))
     descricao = Column(Text)
+    valor_taxa = Column(Numeric(15, 2), default=0.00, nullable=False)
 
     conta_origem = relationship("Conta", foreign_keys=[id_conta_origem], back_populates="transacoes_origem")
     conta_destino = relationship("Conta", foreign_keys=[id_conta_destino], back_populates="transacoes_destino")

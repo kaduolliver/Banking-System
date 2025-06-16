@@ -2,7 +2,8 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useAuth } from '../../../../context/authContext';
-import { corDoScore } from '../../../../utils/formatters'
+import { formatMoeda, formatPorcentagem, formatarData, capitalizeText, formatNumeroConta, corDoScore } from '../../../../utils/formatters'; 
+import CopyButton from '../../../../Common/CopyButton';
 
 const tiposConta = ['poupanca', 'corrente', 'investimento'];
 
@@ -14,16 +15,19 @@ export default function ClientAccountInfo() {
             const conta = usuario?.contas?.find(c => c.tipo === tipo);
             return conta && conta.dados_especificos;
         });
-        return tipoDisponivel ?? 'corrente'; // fallback de segurança
+        return tipoDisponivel ?? 'corrente'; 
     };
 
     const [tipoSelecionado, setTipoSelecionado] = useState(getPrimeiraContaDisponivel);
 
-
     if (!usuario) return <div className="text-red-400">Usuário não autenticado.</div>;
     if (!usuario.contas || usuario.contas.length === 0) {
-        return <div className="text-xl font-semibold mt-6 text-center text-red-500">Nenhuma conta encontrada.
-            <p>Reinicie a página (F5)</p></div>;
+        return (
+            <div className="text-xl font-semibold mt-6 text-center text-red-500">
+                Nenhuma conta encontrada.
+                <p>Reinicie a página (F5)</p>
+            </div>
+        );
     }
 
     const contaCorrente = usuario.contas.find(c => c.tipo === 'corrente') || usuario.contas[0];
@@ -43,13 +47,14 @@ export default function ClientAccountInfo() {
     return (
         <div className="flex justify-center mt-6">
             <div className="w-full max-w-3xl space-y-6">
-                <Tabs.Root value={tipoSelecionado}
+                <Tabs.Root 
+                    value={tipoSelecionado}
                     onValueChange={(novoTipo) => {
                         if (contas[novoTipo]) {
                             setTipoSelecionado(novoTipo);
                         }
-                    }}>
-
+                    }}
+                >
                     {/* Cabeçalho e botões */}
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-semibold text-white">Dados da Conta</h2>
@@ -65,15 +70,16 @@ export default function ClientAccountInfo() {
                                         onMouseDown={e => {
                                             if (!contaExiste || isAtivo) e.preventDefault();
                                         }}
-                                        className={`px-4 py-1 rounded font-medium ${isAtivo
-                                            ? 'bg-amber-700 text-white cursor-default'
-                                            : contaExiste
+                                        className={`px-4 py-1 rounded font-medium ${
+                                            isAtivo
+                                                ? 'bg-amber-700 text-white cursor-default'
+                                                : contaExiste
                                                 ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                                                 : 'bg-zinc-900 text-zinc-600 cursor-not-allowed'
-                                            }`}
+                                        }`}
                                         aria-disabled={!contaExiste || isAtivo}
                                     >
-                                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                                        {capitalizeText(tipo)}
                                     </Tabs.Trigger>
                                 );
                             })}
@@ -86,10 +92,10 @@ export default function ClientAccountInfo() {
                     {/* Agência e número da conta */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <InfoItem label="Agência" value={agencia} />
-                        <InfoItem label="Número da Conta" value={formatNumeroConta(numero)} />
+                        <CopyableInfoItem label="Número da Conta" value={formatNumeroConta(numero)} />
                         <InfoItem label="Saldo" value={formatMoeda(saldo)} />
-                        <InfoItem label="Status" value={capitalize(status) ?? '—'} classNameValue="text-green-500" />
-                        <InfoItem label="Data da Abertura" value={formatData(dataAbertura)} />
+                        <InfoItem label="Status" value={capitalizeText(status) ?? '—'} classNameValue="text-green-500" />
+                        <InfoItem label="Data da Abertura" value={formatarData(dataAbertura)} />
                         <InfoItem label="Score" value={score ?? '—'} classNameValue={corDoScore(score)}/>
                     </div>
 
@@ -120,7 +126,7 @@ export default function ClientAccountInfo() {
                                 className="grid grid-cols-1 sm:grid-cols-2 gap-6"
                             >
                                 <InfoItem label="Limite" value={formatMoeda(contas.corrente?.limite)} />
-                                <InfoItem label="Data de Vencimento" value={formatData(contas.corrente?.data_vencimento)} />
+                                <InfoItem label="Data de Vencimento" value={formatarData(contas.corrente?.data_vencimento)} />
                                 <InfoItem label="Taxa de Manutenção" value={formatPorcentagem(contas.corrente?.taxa_manutencao)} />
                             </motion.div>
                         </Tabs.Content>
@@ -133,7 +139,7 @@ export default function ClientAccountInfo() {
                                 exit={{ opacity: 0, x: 20 }}
                                 className="grid grid-cols-1 sm:grid-cols-2 gap-6"
                             >
-                                <InfoItem label="Perfil de Risco" value={capitalize(contas.investimento?.perfil_risco)} />
+                                <InfoItem label="Perfil de Risco" value={capitalizeText(contas.investimento?.perfil_risco)} />
                                 <InfoItem label="Valor Mínimo" value={formatMoeda(contas.investimento?.valor_minimo)} />
                                 <InfoItem label="Taxa Rendimento Base" value={formatPorcentagem(contas.investimento?.taxa_rendimento_base)} />
                             </motion.div>
@@ -156,28 +162,17 @@ function InfoItem({ label, value, classNameValue }) {
     );
 }
 
+function CopyableInfoItem({ label, value }) {
+    const isCopiable = value && value !== '—';
 
-function formatMoeda(valor) {
-    if (valor == null) return '—';
-    return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
+    return (
+        <div className="space-y-1">
+            <div className="text-sm text-zinc-400">{label}</div>
 
-function formatPorcentagem(valor) {
-    if (valor == null) return '—';
-    return `${(valor * 100).toFixed(2)}%`;
-}
-
-function formatData(data) {
-    if (!data) return '—';
-    return new Date(data).toLocaleDateString('pt-BR');
-}
-
-function capitalize(texto) {
-    if (!texto) return '—';
-    return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
-}
-
-function formatNumeroConta(numero) {
-    if (!numero || numero.length < 2) return numero ?? '—';
-    return numero.slice(0, -1) + '-' + numero.slice(-1);
+            <div className="flex items-center gap-1">
+                <span className="text-base font-medium text-white">{value ?? '—'}</span>
+                {isCopiable && <CopyButton text={value} />}
+            </div>
+        </div>
+    );
 }

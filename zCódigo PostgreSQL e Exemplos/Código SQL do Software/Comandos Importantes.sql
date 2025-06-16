@@ -4,11 +4,6 @@ TRUNCATE TABLE conta_poupanca, conta_corrente, conta_investimento, transacao, em
                relatorio, solicitacao_conta, auditoria, conta, agencia, endereco,
                funcionario, cliente, usuario RESTART IDENTITY;
 
-
--- Resetar database COMPLETA
-DROP DATABASE seu_nome_do_banco_de_dados;
-CREATE DATABASE seu_nome_do_banco_de_dados;
-
 -- Mudar tipo_usuario 
 
 BEGIN;

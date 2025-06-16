@@ -24,7 +24,6 @@ export default function AgencyAddressForm(props) {
 
   if (loading) return <div className="text-zinc-400">Carregando endereço...</div>;
 
-  /** Render helpers */
   const fieldClass = `w-full p-2 rounded bg-zinc-800 text-white outline-none ${
     editing ? 'border border-amber-600' : 'opacity-70'
   }`;

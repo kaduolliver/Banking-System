@@ -98,7 +98,16 @@ export default function LoginAndRegister() {
         exibirSplashERedirecionar(resposta);
       }
     } catch (err) {
-      setErro(err.message || 'Erro no login.');
+      let errorMessage = err.message || 'Erro no login.';
+
+      if (errorMessage.includes('Sua conta está temporariamente bloqueada')) {
+        setPrecisaOTP(false); 
+      } else if (errorMessage.includes('Você tem mais')) {
+        
+        setPrecisaOTP(false);
+      }
+
+      setErro(errorMessage);
     } finally {
       setIsLoading(false);
     }

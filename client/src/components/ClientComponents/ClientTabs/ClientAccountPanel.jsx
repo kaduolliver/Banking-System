@@ -9,7 +9,7 @@ import FadeBlurTransition from '../../EffectsComponents/FadeBlurTransition';
 
 export default function ClientAccountPanel() {
   const { usuario, carregando, setUsuario } = useAuth();
-
+  console.log(usuario)
   const [enderecoSalvo, setEnderecoSalvo] = useState(false);
   const [temConta, setTemConta] = useState(null);
   const [tiposConta, setTiposConta] = useState([]);

@@ -54,7 +54,7 @@ def realizar_deposito(id_usuario: int, data: dict):
             id_conta_destino=conta.id_conta,
             tipo_transacao='deposito',
             valor=valor_decimal,
-            descricao=data.get("descricao", "Deposito via app"),
+            descricao=data.get("descricao", "Depósito via app"),
         )
         db.add(nova_tx)
         db.commit()

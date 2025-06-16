@@ -31,6 +31,18 @@ WHERE id_usuario = 2; -- quem será o gerente
 
 --OBS 3: Todo funcionario cadastrado no sistema começa como estagiário.
 
+-- Mudar score_credito do cliente
+
+UPDATE cliente
+SET score_credito = 95 -- Determine o score aqui. Emprestimo -> if score_credito >= 80 else "REJEITADO"
+WHERE id_cliente = 1; -- Substitua 1 pelo id_cliente do cliente
+
+-- Mudar limite da conta corrente:
+
+UPDATE conta_corrente
+SET limite = 5000.00
+WHERE id_conta_corrente = 1;
+
 
 -------------------------TABELAS E FUNÇÕES-------------------------------------
 
@@ -44,7 +56,9 @@ CREATE TABLE usuario (
 	senha_hash VARCHAR(255) NOT NULL,
 	otp_ativo BOOLEAN DEFAULT FALSE,
 	otp_expiracao TIMESTAMP,
-	otp_codigo VARCHAR(10) -- ++
+	otp_codigo VARCHAR(10), -- ++
+    tentativas_login_falhas INTEGER NOT NULL DEFAULT 0, -- ++
+    data_bloqueio TIMESTAMP NULL -- ++
 );
 
 -- Tabela agencia (atual)
@@ -149,6 +163,7 @@ CREATE TABLE transacao (
 	tipo_transacao VARCHAR(50) NOT NULL CHECK (tipo_transacao IN ('deposito', 'saque', 'transferencia')),
 	valor NUMERIC(15, 2) NOT NULL,
 	data_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    valor_taxa NUMERIC(15, 2) DEFAULT 0.00,
 	descricao TEXT,
 	FOREIGN KEY (id_conta_origem) REFERENCES conta(id_conta),
 	FOREIGN KEY (id_conta_destino) REFERENCES conta(id_conta)
@@ -167,8 +182,10 @@ CREATE TABLE emprestimo (
 	data_aprovacao TIMESTAMP,
 	status VARCHAR(20) NOT NULL DEFAULT 'PENDENTE' CHECK (status IN ('PENDENTE', 'APROVADO', 'REJEITADO', 'PAGO')),
 	score_risco NUMERIC(5, 2),
+    id_funcionario_aprovador INT, -- ++ identificar o funcionario que aprova o emprestimo na auditoria
 	FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
-	FOREIGN KEY (id_conta) REFERENCES conta(id_conta)
+	FOREIGN KEY (id_conta) REFERENCES conta(id_conta),
+    FOREIGN KEY (id_funcionario_aprovador) REFERENCES funcionario(id_funcionario) -- ++ fk funcionario aprovador
 );
 
 CREATE TABLE auditoria (
@@ -221,12 +238,9 @@ BEGIN
     IF NEW.status = 'APROVADO'
         AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'APROVADO') THEN
 
-        -- Registra a transação de depósito na tabela de transações.
-        -- A conta do cliente é a 'conta_origem' para o depósito.
-        -- O saldo será atualizado pelo trigger tg_atualizar_saldo_conta.
         INSERT INTO transacao (
             id_conta_origem,
-            id_conta_destino, -- Deve ser NULL, pois a origem é o 'banco' em um depósito de empréstimo.
+            id_conta_destino,
             tipo_transacao,
             valor,
             data_hora,
@@ -240,11 +254,10 @@ BEGIN
             CONCAT('Depósito de Empréstimo ID ', NEW.id_emprestimo, ' aprovado.')
         );
 
-        -- Registrar na auditoria que um empréstimo foi aprovado e o depósito registrado
         PERFORM fn_registrar_auditoria(
-            NULL, -- ou o ID do funcionário que aprovou, se tiver acesso aqui
-            'EMPRESTIMO_APROVADO_E_DEPOSITADO_REGISTRADO',
-            CONCAT('Empréstimo ID ', NEW.id_emprestimo, ' de R$', NEW.valor_solicitado, ' aprovado e registro de depósito na conta ID ', NEW.id_conta)
+            NEW.id_funcionario_aprovador, 
+            'EMPRESTIMO_DEPOSITADO',
+            CONCAT('Depósito de Empréstimo ID ', NEW.id_emprestimo, ' de R$', NEW.valor_solicitado, ' aprovado e depositado na conta ID ', NEW.id_conta, ' pelo funcionário ID ', NEW.id_funcionario_aprovador)
         );
 
     END IF;
@@ -253,18 +266,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- ++ Função para atualizar o saldo do saque/deposito/emprestimo
 CREATE OR REPLACE FUNCTION fn_atualizar_saldo_conta()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_tipo_conta            TEXT;
-    v_saldo                 NUMERIC(15,2);
-    v_limite                NUMERIC(15,2) := 0;
-    v_total_depositos_hoje NUMERIC(15,2);
-    -- Aumentado o limite de depósito diário para acomodar valores maiores de empréstimos
-    LIMITE_DEPOSITO_DIARIO NUMERIC(15,2) := 100000.00; -- Limite de R$ 1.000.000,00
-
+    v_tipo_conta              TEXT;
+    v_saldo                   NUMERIC(15,2);
+    v_limite                  NUMERIC(15,2) := 0;
+    v_total_depositos_hoje    NUMERIC(15,2);
+    v_total_saques_hoje       NUMERIC(15,2);
+    LIMITE_DEPOSITO_DIARIO_PADRAO NUMERIC(15,2) := 10000.00; -- Limite de R$ 10.000,00 para depósitos normais
+    LIMITE_SAQUE_DIARIO       NUMERIC(15,2) := 5000.00; -- NOVO: Limite de R$ 5.000,00 para saques diários
 BEGIN
-    -- 1. Recupera saldo e, se for corrente, o limite da conta de origem
+
     SELECT c.tipo_conta,
            c.saldo,
            COALESCE(cc.limite, 0)
@@ -275,31 +290,47 @@ BEGIN
     LEFT JOIN conta_corrente cc USING (id_conta)
     WHERE  c.id_conta = NEW.id_conta_origem;
 
-    -- 2. Valida saldo disponível (existente) para saques e transferências
     IF NEW.tipo_transacao IN ('saque', 'transferencia') THEN
         IF (v_saldo + CASE WHEN v_tipo_conta = 'corrente' THEN v_limite ELSE 0 END) < NEW.valor THEN
             RAISE EXCEPTION 'Saldo (incluindo limite) insuficiente na conta de origem.';
         END IF;
     END IF;
 
-    -- 3. Verificar limite diário para depósitos
     IF NEW.tipo_transacao = 'deposito' THEN
-        -- Calcula o total de depósitos feitos na conta_origem HOJE
+
+        IF NEW.descricao LIKE 'Depósito de Empréstimo ID %' THEN
+            
+            NULL;
+        ELSE
+
+            SELECT COALESCE(SUM(valor), 0)
+            INTO v_total_depositos_hoje
+            FROM transacao
+            WHERE id_conta_origem = NEW.id_conta_origem
+              AND tipo_transacao = 'deposito'
+              AND data_hora::DATE = CURRENT_DATE
+              AND descricao NOT LIKE 'Depósito de Empréstimo ID %';
+
+            IF (v_total_depositos_hoje + NEW.valor) > LIMITE_DEPOSITO_DIARIO_PADRAO THEN
+                RAISE EXCEPTION 'Limite de depósito diário de R$ % atingido para esta conta. Total depositado hoje: R$ %. Depósito atual: R$ %.',
+                                 LIMITE_DEPOSITO_DIARIO_PADRAO, v_total_depositos_hoje, NEW.valor;
+            END IF;
+        END IF;
+    ELSIF NEW.tipo_transacao = 'saque' THEN
         SELECT COALESCE(SUM(valor), 0)
-        INTO v_total_depositos_hoje
+        INTO v_total_saques_hoje
         FROM transacao
         WHERE id_conta_origem = NEW.id_conta_origem
-          AND tipo_transacao = 'deposito'
+          AND tipo_transacao = 'saque'
           AND data_hora::DATE = CURRENT_DATE;
 
-        -- Se a soma dos depósitos de hoje mais o novo depósito exceder o limite
-        IF (v_total_depositos_hoje + NEW.valor) > LIMITE_DEPOSITO_DIARIO THEN
-            RAISE EXCEPTION 'Limite de depósito diário de R$ % atingido para esta conta. Total depositado hoje: R$ %. Depósito atual: R$ %.',
-                            LIMITE_DEPOSITO_DIARIO, v_total_depositos_hoje, NEW.valor;
+        IF (v_total_saques_hoje + NEW.valor) > LIMITE_SAQUE_DIARIO THEN
+            RAISE EXCEPTION 'Limite de saque diário de R$ % atingido para esta conta. Total sacado hoje: R$ %. Saque atual: R$ %.',
+                            LIMITE_SAQUE_DIARIO, v_total_saques_hoje, NEW.valor;
         END IF;
     END IF;
 
-    -- 4. Atualiza saldo
+    -- Atualiza o saldo de acordo com o tipo de transação
     IF NEW.tipo_transacao = 'deposito' THEN
         UPDATE conta
         SET saldo = saldo + NEW.valor
@@ -336,12 +367,12 @@ DECLARE
     v_soma INT := 0;
     v_char CHAR;
     v_digit INT;
+    v_nome_cliente VARCHAR(255); 
 BEGIN
     IF NEW.status = 'APROVADO' AND (OLD.status IS DISTINCT FROM 'APROVADO') THEN
-        -- Construir base do número da conta
+
         v_numero_base := TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') || NEW.id_solicitacao;
 
-        -- Calcular dígito verificador (DV) com módulo 10
         FOR i IN 1..LENGTH(v_numero_base) LOOP
             v_char := SUBSTRING(v_numero_base FROM i FOR 1);
             IF v_char ~ '[0-9]' THEN
@@ -352,10 +383,8 @@ BEGIN
 
         v_dv := v_soma % 10;
 
-        -- Gerar número final da conta com DV
         v_numero_conta := 'BR' || v_numero_base || v_dv;
 
-        -- Buscar o ID da agência do funcionário aprovador
         SELECT f.id_agencia INTO v_id_agencia
         FROM funcionario f
         WHERE f.id_funcionario = NEW.id_funcionario_aprovador;
@@ -364,7 +393,11 @@ BEGIN
             RAISE EXCEPTION 'Agência do funcionário aprovador (ID: %) não encontrada.', NEW.id_funcionario_aprovador;
         END IF;
 
-        -- Inserir conta
+        SELECT u.nome INTO v_nome_cliente
+        FROM cliente c
+        JOIN usuario u ON c.id_usuario = u.id_usuario
+        WHERE c.id_cliente = NEW.id_cliente;
+
         INSERT INTO conta (
             numero_conta, id_agencia, saldo, tipo_conta, id_cliente, data_abertura, status
         ) VALUES (
@@ -373,7 +406,6 @@ BEGIN
         )
         RETURNING id_conta INTO v_id_nova_conta;
 
-        -- Inserir dados específicos conforme tipo da conta
         IF NEW.tipo_conta = 'poupanca' THEN
             INSERT INTO conta_poupanca (id_conta, taxa_rendimento, ultimo_rendimento)
             VALUES (v_id_nova_conta, 0.005, 0.00);
@@ -384,6 +416,12 @@ BEGIN
             INSERT INTO conta_investimento (id_conta, perfil_risco, valor_minimo, taxa_rendimento_base)
             VALUES (v_id_nova_conta, 'conservador', 0.00, 0.009);
         END IF;
+       
+        PERFORM fn_registrar_auditoria(
+            NEW.id_funcionario_aprovador, 
+            'ABERTURA_CONTA_APROVADA',
+            CONCAT('Nova conta ', NEW.tipo_conta, ' (Nº ', v_numero_conta, ') aberta para o cliente ', v_nome_cliente, ' (ID: ', NEW.id_cliente, ').')
+        );
     END IF;
     RETURN NEW;
 END;
@@ -448,6 +486,50 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Função para registrar o login de um usuário (funcionário ou cliente)
+CREATE OR REPLACE FUNCTION fn_registrar_login(p_id_usuario INT)
+RETURNS VOID AS $$
+DECLARE
+    v_tipo_usuario VARCHAR(50);
+    v_nome_usuario VARCHAR(255);
+BEGIN
+    SELECT tipo_usuario, nome INTO v_tipo_usuario, v_nome_usuario
+    FROM usuario
+    WHERE id_usuario = p_id_usuario;
+
+    IF v_tipo_usuario IS NOT NULL THEN
+        PERFORM fn_registrar_auditoria(
+            p_id_usuario,
+            'LOGIN',
+            CONCAT('Usuário ', v_nome_usuario, ' (', v_tipo_usuario, ') realizou login.')
+        );
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Função para registrar o logout de um usuário (funcionário ou cliente)
+CREATE OR REPLACE FUNCTION fn_registrar_logout(p_id_usuario INT)
+RETURNS VOID AS $$
+DECLARE
+    v_tipo_usuario VARCHAR(50);
+    v_nome_usuario VARCHAR(255);
+BEGIN
+    SELECT tipo_usuario, nome INTO v_tipo_usuario, v_nome_usuario
+    FROM usuario
+    WHERE id_usuario = p_id_usuario;
+
+    IF v_tipo_usuario IS NOT NULL THEN
+        PERFORM fn_registrar_auditoria(
+            p_id_usuario,
+            'LOGOUT',
+            CONCAT('Usuário ', v_nome_usuario, ' (', v_tipo_usuario, ') realizou logout.')
+        );
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Trigger para atualizar saldo
 CREATE TRIGGER tg_atualizar_saldo_conta
 BEFORE INSERT ON transacao
@@ -479,6 +561,7 @@ FOR EACH ROW
 WHEN (NEW.codigo_funcionario IS NULL)
 EXECUTE FUNCTION gerar_codigo_funcionario();
 
+-- ++ Trigger para gerar o código do funcionario (de acordo com o cargo)
 CREATE TRIGGER trigger_gerar_codigo_funcionario_update
 BEFORE UPDATE ON funcionario
 FOR EACH ROW
@@ -502,29 +585,35 @@ JOIN cliente c ON e.id_cliente = c.id_cliente
 JOIN usuario u ON c.id_usuario = u.id_usuario
 WHERE e.status = 'APROVADO';
 
--- Procedure processar_emprestimo
+-- Procedure para processar os emprestimos e setar limite
 CREATE OR REPLACE PROCEDURE processar_emprestimo(
-    IN p_id_cliente     INT,
-    IN p_id_conta       INT,
-    IN p_valor          NUMERIC(15,2),
-    IN p_prazo          INT,
-    IN p_finalidade     VARCHAR(100),
-    IN p_score_risco    NUMERIC(5,2)
+    IN p_id_cliente      INT,
+    IN p_id_conta        INT,
+    IN p_valor           NUMERIC(15,2),
+    IN p_prazo           INT,
+    IN p_finalidade      VARCHAR(100),
+    IN p_score_risco     NUMERIC(5,2)
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_status          VARCHAR(20) := 'PENDENTE';      
-    v_taxa            NUMERIC(5,2) := 0;
-    v_valor_total     NUMERIC(15,2) := p_valor;
+    v_status            VARCHAR(20) := 'PENDENTE';
+    v_taxa              NUMERIC(5,2) := 0;
+    v_valor_total       NUMERIC(15,2) := p_valor;
+    LIMITE_VALOR_EMPRESTIMO NUMERIC(15,2) := 100000.00; -- Limite de R$ 100.000,00 para cada empréstimo
 BEGIN
-    -- Aprovação automática apenas se score for MUITO alto (exemplo ≥ 80)
+
+    IF p_valor > LIMITE_VALOR_EMPRESTIMO THEN
+        RAISE EXCEPTION 'O valor solicitado para o empréstimo (R$ %) excede o limite máximo de R$ %.', p_valor, LIMITE_VALOR_EMPRESTIMO;
+    END IF;
+
+    -- Aprovação automática dependendo do score
     IF p_score_risco >= 80 THEN
         v_status := 'APROVADO';
-        v_taxa   := 0.5;                               -- calcule como quiser
+        v_taxa   := 0.5;
         v_valor_total := p_valor * POWER(1 + v_taxa/100, p_prazo);
 
-		-- Rejeição automática
+    -- Rejeição automática dependendo do score
     ELSIF p_score_risco < 40 THEN
         v_status := 'REJEITADO';
     END IF;
@@ -543,17 +632,17 @@ $$;
 -- Procedure para aprovar emprestimo
 CREATE OR REPLACE PROCEDURE decidir_emprestimo(
     IN p_id_emprestimo INT,
-    IN p_aprovado      BOOLEAN,
-    IN p_id_funcionario INT
+    IN p_aprovado BOOLEAN,
+    IN p_id_funcionario INT 
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_score       NUMERIC(5,2);
-    v_taxa        NUMERIC(5,2) := 0;
-    v_valor       NUMERIC(15,2);
+    v_score NUMERIC(5,2);
+    v_taxa NUMERIC(5,2) := 0;
+    v_valor NUMERIC(15,2);
     v_valor_total NUMERIC(15,2);
-    v_prazo       INT;
+    v_prazo INT;
 BEGIN
     IF p_aprovado THEN
         -- Busca dados do empréstimo
@@ -564,10 +653,10 @@ BEGIN
 
         -- Define taxa baseada no score
         v_taxa := CASE
-                    WHEN v_score >= 80 THEN 0.5
-                    WHEN v_score >= 60 THEN 1.0
-                    WHEN v_score >= 40 THEN 2.0
-                    ELSE 3.0
+                      WHEN v_score >= 80 THEN 0.5
+                      WHEN v_score >= 60 THEN 1.0
+                      WHEN v_score >= 40 THEN 2.0
+                      ELSE 3.0
                   END;
 
         -- Calcula valor total com juros compostos mensais
@@ -575,17 +664,21 @@ BEGIN
 
         -- Atualiza empréstimo
         UPDATE emprestimo
-        SET status              = 'APROVADO',
-            data_aprovacao      = CURRENT_TIMESTAMP,
-            taxa_juros_mensal   = v_taxa,
-            valor_total         = v_valor_total
+        SET status = 'APROVADO',
+            data_aprovacao = CURRENT_TIMESTAMP,
+            taxa_juros_mensal = v_taxa,
+            valor_total = v_valor_total,
+
+            id_funcionario_aprovador = p_id_funcionario
         WHERE id_emprestimo = p_id_emprestimo
           AND status = 'PENDENTE';
 
     ELSE
         UPDATE emprestimo
-        SET status         = 'REJEITADO',
-            data_aprovacao = CURRENT_TIMESTAMP
+        SET status = 'REJEITADO',
+            data_aprovacao = CURRENT_TIMESTAMP,
+
+            id_funcionario_aprovador = p_id_funcionario
         WHERE id_emprestimo = p_id_emprestimo
           AND status = 'PENDENTE';
     END IF;
@@ -593,13 +686,12 @@ BEGIN
     -- Auditoria
     PERFORM fn_registrar_auditoria(
         p_id_funcionario,
-        'DECISAO EMPRESTIMO',
+        'DECISAO_EMPRESTIMO', 
         CONCAT('Empréstimo ', p_id_emprestimo, ' => ',
                CASE WHEN p_aprovado THEN 'APROVADO' ELSE 'REJEITADO' END)
     );
 END;
 $$;
-
 
 CREATE INDEX idx_emprestimo_cliente_data ON emprestimo (id_cliente, data_solicitacao);
 CREATE INDEX idx_transacao_conta_data ON transacao(id_conta_origem, data_hora DESC);

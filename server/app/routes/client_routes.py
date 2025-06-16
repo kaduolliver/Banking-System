@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, send_file
 from base64 import b64decode
 import json
 import time
@@ -7,11 +7,12 @@ from app.controllers.client_controllers.client import (
     cliente_verificar_possui_conta,
     cliente_solicitar_emprestimo,
     cliente_realizar_saque,
-    cliente_realizar_saque_por_qr
-)
-from app.controllers.client_controllers.client import (
+    cliente_realizar_saque_por_qr,
     cliente_realizar_deposito,
     cliente_realizar_deposito_por_qr,
+    cliente_realizar_transferencia,
+    cliente_obter_extrato,
+    cliente_gerar_pdf_extrato
 )
 
 client_bp = Blueprint('client', __name__)
@@ -28,6 +29,8 @@ def route_solicitar_abertura():
 def route_verificar_conta(cliente_id):
     if 'id_usuario' not in session:
         return jsonify({'erro': 'Usuário não autenticado.'}), 401
+    if session['id_usuario'] != cliente_id:
+        return jsonify({'erro': 'Acesso negado. Você não tem permissão para acessar esta conta.'}), 403
     resposta, status = cliente_verificar_possui_conta(session['id_usuario'])
     return jsonify(resposta), status
 
@@ -118,3 +121,49 @@ def route_realizar_deposito_qr():
 
     except Exception as e:
         return jsonify({"erro": f"Token inválido ou erro interno: {str(e)}"}), 400
+    
+@client_bp.route('/api/transferencia', methods=['POST'])
+def route_realizar_transferencia():
+    if 'id_usuario' not in session:
+        return jsonify({'erro': 'Usuário não autenticado.'}), 401
+    
+    data = request.get_json()
+    resposta, status = cliente_realizar_transferencia(session['id_usuario'], data)
+    return jsonify(resposta), status
+
+@client_bp.route('/api/extrato/<int:cliente_id>', methods=['GET'])
+def route_obter_extrato(cliente_id):
+    if 'id_usuario' not in session:
+        return jsonify({'erro': 'Usuário não autenticado.'}), 401
+    if session['id_usuario'] != cliente_id:
+        return jsonify({'erro': 'Acesso negado. Você não tem permissão para acessar este extrato.'}), 403
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    limit = request.args.get('limit', default=10, type=int)
+
+    resposta, status = cliente_obter_extrato(session['id_usuario'], start_date, end_date, limit)
+    return jsonify(resposta), status
+
+@client_bp.route('/api/extrato/<int:cliente_id>/pdf', methods=['GET'])
+def route_gerar_pdf_extrato(cliente_id):
+    if 'id_usuario' not in session:
+        return jsonify({'erro': 'Usuário não autenticado.'}), 401
+    if session['id_usuario'] != cliente_id:
+        return jsonify({'erro': 'Acesso negado. Você não tem permissão para gerar este PDF.'}), 403
+
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    limit = request.args.get('limit', default=10, type=int)
+
+    pdf_buffer, status = cliente_gerar_pdf_extrato(session['id_usuario'], start_date, end_date, limit)
+
+    if status != 200:
+        return jsonify(pdf_buffer), status 
+
+    return send_file(
+        pdf_buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=f'extrato_cliente_{cliente_id}.pdf'
+    )

@@ -14,7 +14,7 @@ function getPlaceholder(campo) {
     return placeholders[campo] || '';
 }
 
-export default function AdmPersonalData() {
+export default function EmpPersonalData() {
     const {
         usuario,
         carregando,

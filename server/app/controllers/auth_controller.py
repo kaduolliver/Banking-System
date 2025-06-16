@@ -3,7 +3,8 @@ from app.services.auth_services import (
     registrar_usuario,
     login_usuario,
     validar_otp,
-    verificar_sessao
+    verificar_sessao,
+    logout_usuario
 )
 from app.services.auth_services import obter_usuario_atual
 
@@ -28,6 +29,12 @@ def auth_validar_otp(data):
 def auth_verificar_sessao():
     try:
         return verificar_sessao()
+    except Exception as e:
+        return {"erro": str(e)}, 500
+    
+def auth_logout_usuario():
+    try:
+        return logout_usuario()
     except Exception as e:
         return {"erro": str(e)}, 500
 

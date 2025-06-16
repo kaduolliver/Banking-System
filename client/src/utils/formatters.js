@@ -29,6 +29,11 @@ export function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+export function capitalizeText(texto) {
+    if (!texto) return '—';
+    return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+}
+
 export function validarTelefone(telefone) {
   const regex = /^\(\d{2}\)\s\d{5}-\d{4}$/;
   return regex.test(telefone);
@@ -43,19 +48,11 @@ export function formatCEP(cep) {
 }
 
 export function formatarMoeda(valor) {
-  // Se o valor de entrada é realmente vazio, null ou undefined,
-  // ou se após a limpeza de não-dígitos resulta em algo que não é número (e não é zero),
-  // podemos retornar uma string vazia para limpar o campo.
-  // Caso contrário, ele tentará formatar o '0' para 'R$ 0,00'.
   const valorApenasNumeros = valor.toString().replace(/[^\d]/g, "");
-  
   if (valorApenasNumeros === "") {
-      return ""; // Campo fica vazio se nada significativo foi digitado
+      return ""; 
   }
-
   const numeroCentavos = parseInt(valorApenasNumeros, 10);
-
-  // Se parseInt falhar (ex: string com apenas letras após replace), ainda retorna vazio
   if (isNaN(numeroCentavos)) return ""; 
 
   const numeroReais = numeroCentavos / 100;
@@ -68,35 +65,45 @@ export function formatarMoeda(valor) {
 }
 
 export function desformatarMoeda(valorFormatado) {
-  // Se a entrada for vazia, null ou undefined, retorne 0 (número)
-  // Isso permite que formatarMoeda formate "0" para "R$ 0,00"
+
   if (!valorFormatado) {
-    return 0; // Importante retornar o número 0 aqui
+    return 0; 
   }
-
   const apenasNumeros = valorFormatado.replace(/[^\d,]/g, "");
-
-  // Se após remover caracteres a string estiver vazia, significa que não havia números válidos,
-  // então consideramos 0.
   if (apenasNumeros === "") {
-    return 0; // Importante retornar o número 0 aqui
+    return 0;
   }
-
   const valorComPonto = apenasNumeros.replace(/,/g, ".");
-
   const valorFloat = parseFloat(valorComPonto);
-
-  // Se parseFloat resultar em NaN (ex: "."), retorne 0 para que o campo possa exibir "R$ 0,00"
   if (isNaN(valorFloat)) {
-    return 0; // Importante retornar o número 0 aqui
+    return 0; 
   }
-
   return valorFloat;
 }
 
 export function corDoScore(valor) {
-  if (valor == null) return 'text-white';            
-  if (valor <= 39) return 'text-red-500';            
-  if (valor <= 79) return 'text-yellow-400';         
-  return 'text-green-500';                           
+  if (valor == null) return 'text-white';
+  if (valor <= 39) return 'text-red-500';
+  if (valor <= 79) return 'text-yellow-400';
+  return 'text-green-500';
+}
+
+export function formatMoeda(valor) {
+    if (valor == null) return '—';
+    return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+export function formatPorcentagem(valor) {
+    if (valor == null) return '—';
+    return `${(valor * 100).toFixed(2)}%`;
+}
+
+export function formatarData(data) {
+    if (!data) return '—';
+    return new Date(data).toLocaleDateString('pt-BR');
+}
+
+export function formatNumeroConta(numero) {
+    if (!numero || typeof numero !== 'string' || numero.length < 2) return numero ?? '—';
+    return numero.slice(0, -1) + '-' + numero.slice(-1);
 }

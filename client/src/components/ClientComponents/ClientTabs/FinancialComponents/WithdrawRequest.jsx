@@ -71,7 +71,7 @@ export default function WithdrawRequest() {
         const saldoDisponivel =
             contaSelecionada === 'corrente' ? saldo + limite : saldo;
         if (valorFloat > saldoDisponivel) {
-            setError('Saldo (incluindo limite) insuficiente');
+            setError('Saldo (incluindo limite) para o valor solicitado.');
             return;
         }
 
@@ -93,7 +93,7 @@ export default function WithdrawRequest() {
 
 
 
-            setQrCodeData(qrUrl);             // ② grava só a URL
+            setQrCodeData(qrUrl);
             setSuccess('QR Code gerado. Aponte a câmera para concluir o saque.');
             return;
         }
@@ -111,23 +111,23 @@ export default function WithdrawRequest() {
     const executarSaque = async (valorFloat) => {
         try {
             setLoading(true);
-            await realizarSaque({
+            const response = await realizarSaque({
                 id_conta: idConta,
                 valor: valorFloat,
                 descricao,
             });
 
-            setSuccess(`Saque de R$ ${valorFloat.toFixed(2)} realizado com sucesso.`);
+            setSuccess(response.mensagem);
             setValor('');
             setDescricao('');
 
             atualizarUsuario({
                 contas: usuario.contas.map(c => {
                     if (c.id_conta === idConta) {
-                        const novoSaldo = Number(c.saldo) - valorFloat;
+
                         return {
                             ...c,
-                            saldo: novoSaldo >= 0 ? novoSaldo : 0,
+                            saldo: response.novo_saldo,
                         };
                     }
                     return c;
@@ -156,9 +156,9 @@ export default function WithdrawRequest() {
                 setDescricao('');
                 setSuccess('Saque realizado com sucesso.');
                 setQrCodeData(null);
-                clearInterval(intervalo); // para de checar após primeira atualização
+                clearInterval(intervalo);
             }
-        }, 3000); // verifica a cada 5 segundos
+        }, 3000);
 
         return () => clearInterval(intervalo);
     }, [qrCodeData, saldo, idConta, atualizarUsuario]);
@@ -242,10 +242,10 @@ export default function WithdrawRequest() {
                     value={valor}
                     onChange={handleValorChange}
                     placeholder="R$ 0,00"
-                    className="w-full px-3 py-2 rounded bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-600
-            [&::-webkit-outer-spin-button]:appearance-none
-            [&::-webkit-inner-spin-button]:appearance-none
-            [appearance:textfield]"
+                    className={`w-full px-3 py-2 rounded bg-zinc-800 text-white border focus:outline-none focus:ring-2 focus:ring-amber-600 transition
+              [&::-webkit-outer-spin-button]:appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none
+              [appearance:textfield] ${error ? "border-red-500" : "border-zinc-700"}`}
                     disabled={loading}
                 />
             </FormItem>
@@ -277,7 +277,7 @@ export default function WithdrawRequest() {
                     disabled={loading}
                     className="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-orange-700 hover:to-amber-600 rounded-lg disabled:opacity-50"
                 >
-                    {loading ? 'Enviando...' : 'Confirmar'}
+                    {loading ? 'Enviando...' : 'Solicitar Saque'}
                 </button>
 
                 {success && (
@@ -289,6 +289,9 @@ export default function WithdrawRequest() {
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
                     <div className="bg-zinc-900 p-6 rounded-xl shadow-xl w-96 text-white">
                         <h2 className="text-lg font-semibold mb-4">Confirme seu CPF</h2>
+                        <p className="text-sm text-zinc-400 mb-4">
+                            Para sua segurança, por favor, digite seu CPF para confirmar o saque.
+                        </p>
 
                         {/* Input com máscara */}
                         <input

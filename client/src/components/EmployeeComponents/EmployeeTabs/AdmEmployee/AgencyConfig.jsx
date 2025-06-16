@@ -8,7 +8,7 @@ export default function AgencyConfig() {
 
     function handleEnderecoSalvo(endereco) {
         setEnderecoSalvo(endereco);
-        // Você pode fazer mais coisas aqui, como exibir uma notificação ou mudar de aba
+        
     }
     if (!usuario) return <div className="text-zinc-400">Carregando usuário...</div>;
 

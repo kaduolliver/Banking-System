@@ -32,3 +32,4 @@ def agency_get_endereco_agencia(agencia_id):
         return endereco, 200
     except Exception as e:
         return {"erro": str(e)}, 500
+    

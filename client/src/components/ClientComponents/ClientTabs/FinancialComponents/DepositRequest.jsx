@@ -24,7 +24,7 @@ export default function DepositRequest() {
     const [contaSelecionada, setContaSelecionada] = useState(contasDeposito[0]?.tipo || '');
     const [showQRCode, setShowQRCode] = useState(false);
     const [qrCodeData, setQrCodeData] = useState('');
-    
+
     // Modal CPF
     const [mostrarModalCPF, setMostrarModalCPF] = useState(false);
     const [cpfDigitado, setCpfDigitado] = useState('');
@@ -39,7 +39,6 @@ export default function DepositRequest() {
         }
     }, [contasDeposito, contaSelecionada]);
 
-    // Atualizado para abrir modal em vez de enviar direto quando manual
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -69,7 +68,7 @@ export default function DepositRequest() {
             const qrToken = btoa(JSON.stringify(payload));
             //const qrUrl = `http://192.168.1.3:5000/api/deposito_qr?token=${encodeURIComponent(qrToken)}`;
             const baseUrl = `${window.location.protocol}//${window.location.hostname}:5000`;
-            const qrUrl = `${baseUrl}/api/saque_qr?token=${encodeURIComponent(qrToken)}`;
+            const qrUrl = `${baseUrl}/api/deposito_qr?token=${encodeURIComponent(qrToken)}`;
 
             setQrCodeData(qrUrl);
             setShowQRCode(true);
@@ -77,11 +76,10 @@ export default function DepositRequest() {
             return;
         }
 
-        // Para depósito manual, abrir modal para confirmação do CPF
+        
         setMostrarModalCPF(true);
     };
 
-    // Função chamada no modal para executar o depósito após confirmar CPF
     const confirmarCPFeExecutarDeposito = async () => {
         setError("");
         const cpfSemMascara = cpfDigitado.replace(/\D/g, '');
@@ -138,7 +136,6 @@ export default function DepositRequest() {
     });
 
     useEffect(() => {
-        // só inicia se existe QR code e uma conta válida
         if (!qrCodeData || !idConta) return;
 
         const intervalo = setInterval(async () => {
@@ -306,6 +303,9 @@ export default function DepositRequest() {
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
                     <div className="bg-zinc-900 p-6 rounded-xl shadow-xl w-96 text-white">
                         <h2 className="text-lg font-semibold mb-4">Confirme seu CPF</h2>
+                        <p className="text-sm text-zinc-400 mb-4">
+                            Para sua segurança, por favor, digite seu CPF para confirmar o depósito.
+                        </p>
 
                         {/* Input com máscara */}
                         <input
@@ -313,7 +313,6 @@ export default function DepositRequest() {
                             value={cpfDigitado}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                // Aplica máscara de CPF simples
                                 const somenteDigitos = val.replace(/\D/g, '');
                                 let formatted = '';
                                 if (somenteDigitos.length <= 11) {

@@ -21,9 +21,9 @@ export default function RegisterUser({ onToggle }) {
   });
 
   const [erroSenha, setErroSenha] = useState('');
-  const [erroGeral, setErroGeral] = useState(''); // Novo estado para erros gerais da API
-  const [agencias, setAgencias] = useState([]); // <-- Novo estado para armazenar as agências
-  const [isLoadingAgencias, setIsLoadingAgencias] = useState(false); // Para controle de loading das agências
+  const [erroGeral, setErroGeral] = useState('');
+  const [agencias, setAgencias] = useState([]);
+  const [isLoadingAgencias, setIsLoadingAgencias] = useState(false);
 
   const passwordCriteria = {
     comprimento: {
@@ -51,13 +51,12 @@ export default function RegisterUser({ onToggle }) {
   const isSenhaValida = () =>
     Object.values(passwordCriteria).every((crit) => crit.test(formData.senha));
 
-  // --- Efeito para carregar as agências ao montar o componente ---
   useEffect(() => {
     async function fetchAgencias() {
       setIsLoadingAgencias(true);
       try {
-        const response = await getAgencias(); // <--- Chame o serviço para buscar agências
-        setAgencias(response); // Assumindo que response é um array de agências
+        const response = await getAgencias();
+        setAgencias(response);
       } catch (error) {
         setErroGeral('Erro ao carregar agências. Tente novamente mais tarde.');
         console.error('Erro ao buscar agências:', error);
@@ -66,13 +65,13 @@ export default function RegisterUser({ onToggle }) {
       }
     }
     fetchAgencias();
-  }, []); // Array de dependências vazio para rodar apenas uma vez
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErroSenha('');
-    setErroGeral(''); // Limpa erro geral ao mudar algo
+    setErroGeral('');
   };
 
   const handleSubmit = async (e) => {
@@ -88,15 +87,13 @@ export default function RegisterUser({ onToggle }) {
       return;
     }
 
-    // --- Validação para funcionário e agência ---
     if (formData.tipo_usuario === 'funcionario' && !formData.id_agencia) {
       setErroGeral('Por favor, selecione a agência para o funcionário.');
       return;
     }
-    // --- Fim da validação ---
 
     setErroSenha('');
-    setErroGeral(''); // Limpa erros antes de tentar submeter
+    setErroGeral('');
 
     const dadosLimpos = {
       ...formData,
@@ -104,24 +101,21 @@ export default function RegisterUser({ onToggle }) {
       telefone: formData.telefone.replace(/\D/g, ''),
     };
 
-    // --- Remover id_agencia se o tipo for cliente ---
     if (dadosLimpos.tipo_usuario === 'cliente') {
       delete dadosLimpos.id_agencia;
     } else {
-      // Garante que id_agencia seja um número
       dadosLimpos.id_agencia = parseInt(dadosLimpos.id_agencia, 10);
     }
-    // --- Fim da remoção condicional ---
 
     try {
       const data = await registerUsuario(dadosLimpos);
       alert("Registro realizado com sucesso!");
-      setFormData({ // Limpa o formulário
+      setFormData({ 
         nome: '', cpf: '', data_nascimento: '', telefone: '',
         tipo_usuario: 'cliente', senha: '', confirmarSenha: '', id_agencia: '',
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      onToggle(); // Volta para a tela de login
+      onToggle();
     } catch (error) {
       setErroGeral(error.message || 'Erro ao registrar usuário.');
       console.error('Erro de registro:', error);
@@ -165,7 +159,7 @@ export default function RegisterUser({ onToggle }) {
             value={formData.telefone}
             onChange={handleChange}
             mask="(__) _____-____"
-            icon="phone" // Supondo que 'phone' seja um tipo de ícone reconhecido pelo InputField
+            icon="phone"
           />
         </div>
         <div className="md:col-span-3">
@@ -218,7 +212,7 @@ export default function RegisterUser({ onToggle }) {
 
       <PasswordCriteria senha={formData.senha} criteria={passwordCriteria} />
 
-      {(erroSenha || erroGeral) && ( // Exibir erro de senha ou erro geral
+      {(erroSenha || erroGeral) && ( 
         <motion.p
           className="text-red-600 text-sm font-medium"
           initial={{ opacity: 0, y: -5 }}

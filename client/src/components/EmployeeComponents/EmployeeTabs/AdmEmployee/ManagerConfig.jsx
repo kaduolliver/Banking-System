@@ -7,7 +7,6 @@ export default function ManagerConfig() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { usuario } = useAuth();
-  console.log(employees);
 
   useEffect(() => {
     const loadEmployees = async () => {
