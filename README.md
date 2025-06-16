@@ -180,9 +180,9 @@ Depois de criar as tabelas/funções, etc. Execute o comando:
 <pre>INSERT INTO agencia (nome, codigo_agencia)
 VALUES ('Agencia Central', '001');</pre>
 
-Para criar a agência.
+Com isso criará uma agência. É necessáio ter uma agência cadastrada para criar funcionários.
 
-Depois de cadastrar 2 funcionários, deve inserir a hierarquia de 'Admin' e 'Gerente':
+Depois de cadastrar 2 funcionários, insira a hierarquia de 'Admin' e 'Gerente':
 
 <pre>UPDATE funcionario
 SET cargo = 'Admin',
