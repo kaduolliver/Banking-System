@@ -59,18 +59,17 @@ Desenvolvedores do projeto:
 
 ## React.js NO FRONT-END
 
-- Manipulação do DOM como `document.getElementById` e `innerHTML`
+- Manipulação de componentes
 
-- Escutar eventos `addEventListener`
+- Utilização de hooks e useAuth (authContext) para persistência de dados
 
-- Formatação de campos como **Telefone e CPF**
+- Formatação de campos como **Telefone, CPF, CEP, etc**
 
 - `fetch()` para consumir a API (GET, POST, PUT, DELETE)
 
 - Manipulação de JSON e tratamento de erros com `try/catch`
 
 ---
-
 
 ## API REST com python
 
